@@ -20,11 +20,7 @@ class TestExpValDataloader(TestCase):
         lima = FakeLima()
 
         generator = exp_value_generator(
-            backend=lima,
-            n_qubits=5,
-            circuit_depth=2,
-            pauli_terms=1,
-            max_entries=2
+            backend=lima, n_qubits=5, circuit_depth=2, pauli_terms=1, max_entries=2
         )
 
         with open(self.path_to_file, "w") as f:
