@@ -77,7 +77,10 @@ def exp_value_generator(
         circuit = transpile(random_circuit(n_qubits, random.randint(1, circuit_depth)),
                             backend,
                             optimization_level=0)
-        graph_data = circuit_to_graph_data_json(circuit=circuit, properties=properties)
+        graph_data = circuit_to_graph_data_json(
+            circuit=circuit, properties=properties,
+            use_qubit_features=True, use_gate_features=True
+        )
         observable = generate_random_pauli_sum_op(n_qubits, pauli_terms, pauli_coeff)
 
         ideal_exp_val, noisy_exp_val = create_estimator_meas_data(

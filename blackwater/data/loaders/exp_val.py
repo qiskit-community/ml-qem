@@ -39,12 +39,15 @@ class CircuitGraphExpValMitigationDataset(Dataset):
                 json_data: List[Dict[str, Any]] = json.load(f)
 
             for entry in json_data:
-                data = ExpValueEntry.from_json(entry).to_pyg_data()
+                try:
+                    data = ExpValueEntry.from_json(entry).to_pyg_data()
 
-                for transform in transforms:
-                    data = transform(data)
+                    for transform in transforms:
+                        data = transform(data)
 
-                self.entries.append(data)
+                    self.entries.append(data)
+                except KeyError as e:
+                    pass
 
     def len(self):
         return len(self.entries)
