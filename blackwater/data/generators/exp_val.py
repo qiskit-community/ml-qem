@@ -8,8 +8,13 @@ from qiskit.circuit.random import random_circuit
 from qiskit.providers import BackendV1
 from torch_geometric.data import Data
 
-from blackwater.data.utils import generate_random_pauli_sum_op, create_estimator_meas_data, circuit_to_graph_data_json, \
-    get_backend_properties_v1, encode_pauli_sum_op
+from blackwater.data.utils import (
+    generate_random_pauli_sum_op,
+    create_estimator_meas_data,
+    circuit_to_graph_data_json,
+    get_backend_properties_v1,
+    encode_pauli_sum_op,
+)
 
 
 @dataclass
@@ -33,7 +38,7 @@ class ExpValueEntry:
             "observable": self.observable,
             "ideal_exp_value": self.ideal_exp_value,
             "noisy_exp_value": self.noisy_exp_value,
-            "circuit_depth": self.circuit_depth
+            "circuit_depth": self.circuit_depth,
         }
 
     @classmethod
@@ -41,7 +46,7 @@ class ExpValueEntry:
         return ExpValueEntry(**dictionary)
 
     def to_pyg_data(self):
-        key = 'DAGOpNode_wire_DAGOpNode'
+        key = "DAGOpNode_wire_DAGOpNode"
         g_data = self.circuit_graph
 
         x = torch.tensor(g_data["nodes"]["DAGOpNode"], dtype=torch.float)
@@ -59,7 +64,7 @@ class ExpValueEntry:
             y=y,
             noisy=noisy,
             observable=observable,
-            circuit_depth=circuit_depth
+            circuit_depth=circuit_depth,
         )
 
 
@@ -69,17 +74,21 @@ def exp_value_generator(
     circuit_depth: int,
     pauli_terms: int,
     pauli_coeff: float = 1.0,
-    max_entries: int = 1000
+    max_entries: int = 1000,
 ) -> Iterator[ExpValueEntry]:
     properties = get_backend_properties_v1(backend)
 
     for _ in range(max_entries):
-        circuit = transpile(random_circuit(n_qubits, random.randint(1, circuit_depth)),
-                            backend,
-                            optimization_level=0)
+        circuit = transpile(
+            random_circuit(n_qubits, random.randint(1, circuit_depth)),
+            backend,
+            optimization_level=0,
+        )
         graph_data = circuit_to_graph_data_json(
-            circuit=circuit, properties=properties,
-            use_qubit_features=True, use_gate_features=True
+            circuit=circuit,
+            properties=properties,
+            use_qubit_features=True,
+            use_gate_features=True,
         )
         observable = generate_random_pauli_sum_op(n_qubits, pauli_terms, pauli_coeff)
 
@@ -91,5 +100,5 @@ def exp_value_generator(
             circuit_graph=graph_data,
             observable=encode_pauli_sum_op(observable),
             ideal_exp_value=ideal_exp_val,
-            noisy_exp_value=noisy_exp_val
+            noisy_exp_value=noisy_exp_val,
         )

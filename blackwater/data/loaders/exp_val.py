@@ -11,10 +11,11 @@ from blackwater.data.generators.exp_val import ExpValueEntry
 class CircuitGraphExpValMitigationDataset(Dataset):
     """CircuitGraphMitigationDataset."""
 
-    def __init__(self,
-                 path: Union[str, List[str]],
-                 transforms: Optional[List[BaseTransform]] = None
-                 ):
+    def __init__(
+        self,
+        path: Union[str, List[str]],
+        transforms: Optional[List[BaseTransform]] = None,
+    ):
         """Dataset that contains graphs that preserve information
         about circuits and backends those circuits were executed on (gate errors, t1, t2, etc)
         and has noisy and ideal measurement results for those circuits
@@ -26,9 +27,7 @@ class CircuitGraphExpValMitigationDataset(Dataset):
         """
         super().__init__()
 
-        transforms = transforms or [
-            pyg_transforms.AddSelfLoops()
-        ]
+        transforms = transforms or [pyg_transforms.AddSelfLoops()]
         paths = path if isinstance(path, list) else [path]
         self.paths = paths
 

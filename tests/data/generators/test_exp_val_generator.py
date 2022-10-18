@@ -14,11 +14,7 @@ class TestExpValDataGenerator(TestCase):
         lima = FakeLima()
 
         generator = exp_value_generator(
-            backend=lima,
-            n_qubits=5,
-            circuit_depth=2,
-            pauli_terms=1,
-            max_entries=3
+            backend=lima, n_qubits=5, circuit_depth=2, pauli_terms=1, max_entries=3
         )
 
         entries = [entry for entry in generator]

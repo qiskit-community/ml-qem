@@ -9,27 +9,46 @@ from qiskit.converters import circuit_to_dag
 from qiskit.dagcircuit import DAGOpNode, DAGInNode, DAGOutNode
 from qiskit.opflow import PauliSumOp
 from qiskit.providers import BackendV1
-from qiskit.quantum_info import random_pauli_list
+from qiskit.quantum_info import random_pauli_list, SparsePauliOp
 from torch_geometric.data import Data
 from qiskit_aer import AerSimulator
 from qiskit_aer.primitives import Estimator as AerEstimator
 
 available_gate_names = [
     # one qubit gates
-    'id', 'u1', 'u2', 'u3', 'x', 'y',
-    'z', 'h', 's', 'sdg', 't', 'tdg',
-    'rx', 'ry', 'rz',
+    "id",
+    "u1",
+    "u2",
+    "u3",
+    "x",
+    "y",
+    "z",
+    "h",
+    "s",
+    "sdg",
+    "t",
+    "tdg",
+    "rx",
+    "ry",
+    "rz",
     # two qubit gates
-    'cx', 'cy', 'cz', 'ch', 'crz',
-    'cu1', 'cu3', 'swap', 'rzz',
+    "cx",
+    "cy",
+    "cz",
+    "ch",
+    "crz",
+    "cu1",
+    "cu3",
+    "swap",
+    "rzz",
     # three qubit gates
-    'ccx', 'cswap'
+    "ccx",
+    "cswap",
 ]
 
 
 def circuit_to_pyg_data(
-    circuit: QuantumCircuit,
-    gate_set: Optional[Set[str]] = None
+    circuit: QuantumCircuit, gate_set: Optional[Set[str]] = None
 ) -> Data:
     """Convert circuit to Pytorch geometric data.
     Note: Homogenous conversion.
@@ -45,11 +64,7 @@ def circuit_to_pyg_data(
     num_qubits = circuit.num_qubits
     gate_set: List[str] = gate_set or available_gate_names
     # add "other" gates
-    gate_set += [
-        "barrier",
-        "measure",
-        "delay"
-    ]
+    gate_set += ["barrier", "measure", "delay"]
 
     dag_circuit = circuit_to_dag(circuit)
 
@@ -66,16 +81,16 @@ def circuit_to_pyg_data(
             # TODO: use node.cargs
 
             # get information on which qubits this gate is operating
-            affected_qubits = [0.] * num_qubits
+            affected_qubits = [0.0] * num_qubits
             for arg in node.qargs:
                 affected_qubits[arg.index] = 1.0
 
             # encoding of gate name
-            gate_encoding = [0.] * len(gate_set)
+            gate_encoding = [0.0] * len(gate_set)
             gate_encoding[gate_set.index(node.op.name)] = 1.0
 
             # gate parameters
-            node_params = [0., 0., 0.]
+            node_params = [0.0, 0.0, 0.0]
             for i, param in enumerate(node.op.params):
                 node_params[i] = param
 
@@ -93,7 +108,7 @@ def circuit_to_pyg_data(
 
         if isinstance(source, DAGOpNode) and isinstance(dest, DAGOpNode):
             edge_index.append([nodes_indices[source], nodes_indices[dest]])
-            edge_attr.append([0.])
+            edge_attr.append([0.0])
         else:
             # TODO: handle in and out nodes
             pass
@@ -102,7 +117,7 @@ def circuit_to_pyg_data(
         x=torch.tensor(list(nodes_dict.values()), dtype=torch.float),
         edge_index=torch.tensor(np.transpose(edge_index), dtype=torch.long),
         edge_attr=torch.tensor(np.transpose(edge_attr), dtype=torch.float),
-        circuit_depth=torch.tensor([[circuit.depth()]], dtype=torch.long)
+        circuit_depth=torch.tensor([[circuit.depth()]], dtype=torch.long),
     )
 
 
@@ -132,14 +147,8 @@ def get_backend_properties_v1(backend: BackendV1):
 
     def get_parameters(gate):
         return {
-            **{
-                "gate_error": 0.,
-                "gate_length": 0.
-            },
-            **{
-                param.name: param.value
-                for param in gate.parameters
-            }
+            **{"gate_error": 0.0, "gate_length": 0.0},
+            **{param.name: param.value for param in gate.parameters},
         }
 
     return {
@@ -151,17 +160,16 @@ def get_backend_properties_v1(backend: BackendV1):
                 "index": index,
                 "t1": props.qubit_property(index).get("T1", (0, 0))[0],
                 "t2": props.qubit_property(index).get("T2", (0, 0))[0],
-                "readout_error": props.qubit_property(index).get("readout_error", (0, 0))[0]
+                "readout_error": props.qubit_property(index).get(
+                    "readout_error", (0, 0)
+                )[0],
             }
             for index in range(len(props.qubits))
         },
         "gate_props": {
-            gate_to_index(gate): {
-                "index": gate_to_index(gate),
-                **get_parameters(gate)
-            }
+            gate_to_index(gate): {"index": gate_to_index(gate), **get_parameters(gate)}
             for gate in props.gates
-        }
+        },
     }
 
 
@@ -176,7 +184,9 @@ def counts_to_feature_vector(counts: dict, num_qubits: int) -> List[float]:
         list of floats
     """
     count_format = "{:0" + str(num_qubits) + "b}"
-    all_possible_measurements = {count_format.format(i): 0 for i in range(2 ** num_qubits)}
+    all_possible_measurements = {
+        count_format.format(i): 0 for i in range(2**num_qubits)
+    }
 
     shots = sum(counts.values())
     all_counts = {**all_possible_measurements, **counts}
@@ -184,10 +194,10 @@ def counts_to_feature_vector(counts: dict, num_qubits: int) -> List[float]:
 
 
 def circuit_to_graph_data_json(
-        circuit: QuantumCircuit,
-        properties: dict,
-        use_gate_features: bool = False,
-        use_qubit_features: bool = False
+    circuit: QuantumCircuit,
+    properties: dict,
+    use_gate_features: bool = False,
+    use_qubit_features: bool = False,
 ):
     """Converts circuit to json (dict) for PyG data.
 
@@ -206,8 +216,8 @@ def circuit_to_graph_data_json(
     ]
     gate_type_feature_map = {
         g_name: index
-        for index, g_name
-        in enumerate(properties["gates_set"] + additional_gate_types)}
+        for index, g_name in enumerate(properties["gates_set"] + additional_gate_types)
+    }
 
     # convert to dag
     dag_circuit = circuit_to_dag(circuit)
@@ -216,25 +226,26 @@ def circuit_to_graph_data_json(
     edges = list(dag_circuit.edges())
 
     # get node data
-    nodes_dict = {
-        "DAGOpNode": {},
-        "DAGInNode": {},
-        "DAGOutNode": {}
-    }
+    nodes_dict = {"DAGOpNode": {}, "DAGInNode": {}, "DAGOutNode": {}}
 
     for node in nodes:
         if isinstance(node, DAGOpNode):
 
             # qubit features
             qubit_properties = {i: {} for i in range(5)}
-            qubit_properties = {**qubit_properties, **{
-                qubit.index: properties["qubits_props"][qubit.index]
-                for qubit in node.qargs
-            }}
+            qubit_properties = {
+                **qubit_properties,
+                **{
+                    qubit.index: properties["qubits_props"][qubit.index]
+                    for qubit in node.qargs
+                },
+            }
 
-            t1_vector = [v.get("t1", 0.) for v in qubit_properties.values()]
-            t2_vector = [v.get("t2", 0.) for v in qubit_properties.values()]
-            readout_error_vector = [v.get("readout_error", 0.) for v in qubit_properties.values()]
+            t1_vector = [v.get("t1", 0.0) for v in qubit_properties.values()]
+            t2_vector = [v.get("t2", 0.0) for v in qubit_properties.values()]
+            readout_error_vector = [
+                v.get("readout_error", 0.0) for v in qubit_properties.values()
+            ]
 
             qubit_feature_vector = t1_vector + t2_vector + readout_error_vector
 
@@ -244,7 +255,7 @@ def circuit_to_graph_data_json(
             instruction_key = f"{node.op.name}_{'_'.join([str(args.index) for args in list(node.qargs)])}"
 
             gate_props = properties["gate_props"].get(instruction_key, {})
-            gate_props = {**{"gate_error": 0., "gate_length": 0.}, **gate_props}
+            gate_props = {**{"gate_error": 0.0, "gate_length": 0.0}, **gate_props}
             if "index" in gate_props:
                 del gate_props["index"]
 
@@ -253,7 +264,11 @@ def circuit_to_graph_data_json(
             gate_type_feature[gate_type_feature_map[node.op.name]] = 1.0
 
             # gate parameter values feature vector
-            gate_params_feature_vector = [0., 0., 0.]  # 3 is max number of parameter in any instruction
+            gate_params_feature_vector = [
+                0.0,
+                0.0,
+                0.0,
+            ]  # 3 is max number of parameter in any instruction
             for idx, p in enumerate(node.op.params):
                 if isinstance(p, (float, int)):
                     gate_params_feature_vector[idx] = float(p)
@@ -261,7 +276,10 @@ def circuit_to_graph_data_json(
                     gate_params_feature_vector[idx] = float(p._symbol_expr)
 
             # gate properties
-            gate_props_feature_vector = [gate_props["gate_error"], gate_props["gate_length"]]
+            gate_props_feature_vector = [
+                gate_props["gate_error"],
+                gate_props["gate_length"],
+            ]
 
             feature_vector = gate_params_feature_vector + gate_type_feature
             if use_qubit_features:
@@ -277,7 +295,7 @@ def circuit_to_graph_data_json(
                 "num_clbits": node.op.num_clbits,
                 "params": [],
                 "feature_vector": feature_vector,
-                **gate_props
+                **gate_props,
             }
 
         elif isinstance(node, (DAGInNode, DAGOutNode)):
@@ -288,7 +306,7 @@ def circuit_to_graph_data_json(
                 "type": t,
                 "register": node.wire.register.name,
                 "bit": node.wire.index,
-                "feature_vector": [0, 0]
+                "feature_vector": [0, 0],
             }
 
     # get edge data
@@ -304,7 +322,7 @@ def circuit_to_graph_data_json(
 
         if isinstance(wire, Qubit):
             edge_attrs = properties["qubits_props"][wire.index]
-            key = (source_type, 'wire', dest_type)
+            key = (source_type, "wire", dest_type)
 
             if key not in edge_dict:
                 edge_dict[key] = {
@@ -313,27 +331,28 @@ def circuit_to_graph_data_json(
                         [
                             edge_attrs["t1"],
                             edge_attrs["t2"],
-                            edge_attrs["readout_error"]
+                            edge_attrs["readout_error"],
                         ]
-                    ]
+                    ],
                 }
             else:
                 edge_dict[key]["edge_index"].append([source["index"], dest["index"]])
-                edge_dict[key]["edge_attr"].append([
-                    edge_attrs["t1"],
-                    edge_attrs["t2"],
-                    edge_attrs["readout_error"]
-                ])
+                edge_dict[key]["edge_attr"].append(
+                    [edge_attrs["t1"], edge_attrs["t2"], edge_attrs["readout_error"]]
+                )
 
     # form data
-    data = {
-        "nodes": {},
-        "edges": {}
-    }
+    data = {"nodes": {}, "edges": {}}
 
-    data["nodes"]["DAGOpNode"] = [node["feature_vector"] for node in nodes_dict["DAGOpNode"].values()]
-    data["nodes"]["DAGInNode"] = [node["feature_vector"] for node in nodes_dict["DAGInNode"].values()]
-    data["nodes"]["DAGOutNode"] = [node["feature_vector"] for node in nodes_dict["DAGOutNode"].values()]
+    data["nodes"]["DAGOpNode"] = [
+        node["feature_vector"] for node in nodes_dict["DAGOpNode"].values()
+    ]
+    data["nodes"]["DAGInNode"] = [
+        node["feature_vector"] for node in nodes_dict["DAGInNode"].values()
+    ]
+    data["nodes"]["DAGOutNode"] = [
+        node["feature_vector"] for node in nodes_dict["DAGOutNode"].values()
+    ]
 
     for key, d in edge_dict.items():
         edge_index = np.array(d["edge_index"]).T.tolist()
@@ -341,7 +360,7 @@ def circuit_to_graph_data_json(
 
         data["edges"]["_".join(list(key))] = {
             "edge_index": edge_index,
-            "edge_attr": edge_attr
+            "edge_attr": edge_attr,
         }
 
     # # get measurements
@@ -359,7 +378,9 @@ def circuit_to_graph_data_json(
     return data
 
 
-def create_counts_meas_data(backend: BackendV1, circuit: QuantumCircuit, properties: Dict[str, Any]):
+def create_counts_meas_data(
+    backend: BackendV1, circuit: QuantumCircuit, properties: Dict[str, Any]
+):
     # get measurements
     sim_ideal = AerSimulator()
     sim_noisy = AerSimulator.from_backend(backend)
@@ -369,11 +390,13 @@ def create_counts_meas_data(backend: BackendV1, circuit: QuantumCircuit, propert
 
     return {
         "ideal": counts_to_feature_vector(result_ideal, properties["num_qubits"]),
-        "nosiy": counts_to_feature_vector(result_noisy, properties["num_qubits"])
+        "nosiy": counts_to_feature_vector(result_noisy, properties["num_qubits"]),
     }
 
 
-def create_estimator_meas_data(backend: BackendV1, circuit: QuantumCircuit, observable: PauliSumOp):
+def create_estimator_meas_data(
+    backend: BackendV1, circuit: QuantumCircuit, observable: PauliSumOp
+):
     """Runs Aer estimator with noisy and ideal setup."""
     ideal_estimator = AerEstimator([circuit], [observable])
     ideal_result = ideal_estimator([circuit], [observable])
@@ -387,7 +410,11 @@ def create_estimator_meas_data(backend: BackendV1, circuit: QuantumCircuit, obse
     return ideal_exp_value, noisy_exp_value
 
 
-def encode_pauli_sum_op(op: PauliSumOp):
+def encode_pauli_sum_op(op: Union[PauliSumOp, SparsePauliOp]):
+
+    if isinstance(op, SparsePauliOp):
+        op = PauliSumOp.from_list(op.to_list())
+
     mapping = {
         "X": [0, 0, 0, 1],
         "Y": [0, 0, 1, 0],
@@ -405,14 +432,16 @@ def encode_pauli_sum_op(op: PauliSumOp):
     return rows
 
 
-def generate_random_pauli_sum_op(n_qubits: int, size: int, coeff: Optional[float] = None) -> PauliSumOp:
+def generate_random_pauli_sum_op(
+    n_qubits: int, size: int, coeff: Optional[float] = None
+) -> PauliSumOp:
     """Generates random pauli sum op."""
     paulis = []
-    coeffs = [coeff] * size if coeff \
+    coeffs = (
+        [coeff] * size
+        if coeff
         else np.random.uniform(low=-1.0, high=1.0, size=(size,)).tolist()
+    )
     for coeff, pauli in zip(coeffs, random_pauli_list(n_qubits, size, phase=False)):
-        paulis.append((
-            str(pauli),
-            coeff
-        ))
+        paulis.append((str(pauli), coeff))
     return PauliSumOp.from_list(paulis)

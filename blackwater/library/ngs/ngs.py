@@ -13,6 +13,7 @@ from .model import NGSModel
 
 class NGSEnvironment(Environment):
     """NGS environment."""
+
     def __init__(self):
         pass
 
@@ -22,6 +23,7 @@ class NGSEnvironment(Environment):
 
 class NGSAgent(Agent):
     """NGS agent."""
+
     def __init__(self):
         model = NGSModel()
         env = NGSEnvironment()

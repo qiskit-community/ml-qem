@@ -17,10 +17,7 @@ class ActionResult:
 class Agent:
     """Agent class for RL."""
 
-    def __init__(self,
-                 env: Environment,
-                 model: Module
-                 ):
+    def __init__(self, env: Environment, model: Module):
         self.env = env
         self.model = model
 
@@ -35,4 +32,3 @@ class Agent:
     def perform_action(self, action) -> ActionResult:
         """Performs action."""
         raise NotImplementedError
-
