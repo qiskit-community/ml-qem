@@ -1,4 +1,4 @@
-"""Setup file for Qiskit-Braket provider."""
+"""Setup file for Blackwater."""
 import os
 import setuptools
 

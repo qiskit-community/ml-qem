@@ -1,9 +1,10 @@
+"""NGS model."""
 import torch.nn
 
 
 class NGSModel(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
+    """NGSModel."""
 
-    def forward(self, nodes, edge_index, edge_attr, unitary, batch):
+    def forward(self):
+        """Forward pass."""
         pass

@@ -3,11 +3,9 @@ from ctypes import Union
 from typing import List
 
 from torch import Tensor
-from torch.nn import Module
 
-from blackwater.rl.env import Environment
 from blackwater.rl.agent import Agent, ActionResult
-
+from blackwater.rl.env import Environment
 from .model import NGSModel
 
 
@@ -17,7 +15,7 @@ class NGSEnvironment(Environment):
     def __init__(self):
         pass
 
-    def get_state(self) -> Union[Tensor, List[Tensor]]:
+    def get_state(self) -> Union[Tensor, List[Tensor]]:  # type: ignore
         pass
 
 
