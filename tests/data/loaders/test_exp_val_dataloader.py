@@ -1,3 +1,4 @@
+"""Tests for exp value dataloader."""
 import json
 import os
 from unittest import TestCase
@@ -23,8 +24,10 @@ class TestExpValDataloader(TestCase):
             backend=lima, n_qubits=5, circuit_depth=2, pauli_terms=1, max_entries=2
         )
 
-        with open(self.path_to_file, "w") as f:
-            json.dump([entry.to_dict() for entry in generator], f)
+        with open(  # pylint: disable=unspecified-encoding
+            self.path_to_file, "w"
+        ) as entries_file:
+            json.dump([entry.to_dict() for entry in generator], entries_file)
 
     def tearDown(self) -> None:
         if os.path.exists(self.path_to_file):

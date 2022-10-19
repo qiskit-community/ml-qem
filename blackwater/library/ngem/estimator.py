@@ -20,6 +20,17 @@ from blackwater.exception import BlackwaterException
 
 
 def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Callable:
+    """
+
+    Args:
+        call: executable function
+        model: pytorch mitigation model
+        backend: backend
+
+    Returns:
+        patched callable funciton
+    """
+
     @wraps(call)
     def ngem_call(
         self,
@@ -29,10 +40,8 @@ def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Ca
         **run_options,
     ) -> EstimatorResult:
 
-        if len(parameter_values) > 0 and any([bool(p) for p in parameter_values]):
+        if len(parameter_values) > 0 and any(bool(p) for p in parameter_values):
             raise BlackwaterException("Parameters are not supported by NGEM yet.")
-
-        properties = get_backend_properties_v1(backend)
 
         result: EstimatorResult = call(
             self,
@@ -56,7 +65,7 @@ def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Ca
 
             graph_data = circuit_to_graph_data_json(
                 circuit=circuit,
-                properties=properties,
+                properties=get_backend_properties_v1(backend),
                 use_qubit_features=True,
                 use_gate_features=True,
             )
@@ -87,5 +96,15 @@ def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Ca
 def ngem(
     estimator: BaseEstimator, model: torch.nn.Module, backend: BackendV1
 ) -> BaseEstimator:
+    """Decorator to turn Estimator into NGEM estimator.
+
+    Args:
+        estimator: estimator
+        model: NGEM model
+        backend: backend
+
+    Returns:
+        NGEM estimator class
+    """
     estimator._call = patch_call(estimator._call, model, backend)
     return estimator

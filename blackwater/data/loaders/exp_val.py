@@ -1,13 +1,15 @@
+"""ExpVal dataset."""
 import json
-from typing import Union, List, Optional, Tuple, Dict, Any
+from typing import Union, List, Optional, Dict, Any
 
+from torch_geometric import transforms as pyg_transforms
 from torch_geometric.data import Dataset
 from torch_geometric.transforms import BaseTransform
-from torch_geometric import transforms as pyg_transforms
 
 from blackwater.data.generators.exp_val import ExpValueEntry
 
 
+# pylint: disable=abstract-method
 class CircuitGraphExpValMitigationDataset(Dataset):
     """CircuitGraphMitigationDataset."""
 
@@ -34,8 +36,10 @@ class CircuitGraphExpValMitigationDataset(Dataset):
         self.entries = []
 
         for path_to_file in paths:
-            with open(path_to_file, "r") as f:
-                json_data: List[Dict[str, Any]] = json.load(f)
+            with open(  # pylint: disable=unspecified-encoding
+                path_to_file, "r"
+            ) as entries_file:
+                json_data: List[Dict[str, Any]] = json.load(entries_file)
 
             for entry in json_data:
                 try:
@@ -45,7 +49,7 @@ class CircuitGraphExpValMitigationDataset(Dataset):
                         data = transform(data)
 
                     self.entries.append(data)
-                except KeyError as e:
+                except KeyError:
                     pass
 
     def len(self):
