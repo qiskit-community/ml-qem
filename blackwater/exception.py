@@ -3,5 +3,3 @@
 
 class BlackwaterException(Exception):
     """BlackwaterException."""
-
-    pass

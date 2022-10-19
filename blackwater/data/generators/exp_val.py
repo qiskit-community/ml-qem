@@ -1,3 +1,4 @@
+"""Exp value generator."""
 import random
 from dataclasses import dataclass
 from typing import List, Iterator, Dict, Any
@@ -17,8 +18,11 @@ from blackwater.data.utils import (
 )
 
 
+# pylint: disable=no-member
 @dataclass
 class CircuitGraphData:
+    """CircuitGraphData."""
+
     nodes: List[List[float]]
     edge_index: List[List[int]]
     edge_attr: List[List[float]]
@@ -26,6 +30,8 @@ class CircuitGraphData:
 
 @dataclass
 class ExpValueEntry:
+    """ExpValueEntry."""
+
     circuit_graph: Dict[str, Any]
     observable: List[List[float]]
     ideal_exp_value: float
@@ -33,6 +39,7 @@ class ExpValueEntry:
     circuit_depth: int = 0
 
     def to_dict(self):
+        """Converts to dict."""
         return {
             "circuit_graph": self.circuit_graph,
             "observable": self.observable,
@@ -43,9 +50,11 @@ class ExpValueEntry:
 
     @classmethod
     def from_json(cls, dictionary: Dict[str, Any]):
+        """Creates from dict."""
         return ExpValueEntry(**dictionary)
 
     def to_pyg_data(self):
+        """Converts to PyG data."""
         key = "DAGOpNode_wire_DAGOpNode"
         g_data = self.circuit_graph
 
@@ -76,6 +85,19 @@ def exp_value_generator(
     pauli_coeff: float = 1.0,
     max_entries: int = 1000,
 ) -> Iterator[ExpValueEntry]:
+    """Generator for exp values dataset entries.
+
+    Args:
+        backend: backend to use
+        n_qubits: number of qubits in circuit
+        circuit_depth: circuits depth
+        pauli_terms: number of pauli terms
+        pauli_coeff: pauli coeff
+        max_entries: max number of entries generator can yield
+
+    Returns:
+
+    """
     properties = get_backend_properties_v1(backend)
 
     for _ in range(max_entries):

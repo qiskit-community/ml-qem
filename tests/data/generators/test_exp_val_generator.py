@@ -1,3 +1,4 @@
+"""Test for exp val generator."""
 from unittest import TestCase
 
 from qiskit.providers.fake_provider import FakeLima
@@ -17,7 +18,7 @@ class TestExpValDataGenerator(TestCase):
             backend=lima, n_qubits=5, circuit_depth=2, pauli_terms=1, max_entries=3
         )
 
-        entries = [entry for entry in generator]
+        entries = list(generator)
         self.assertEqual(len(entries), 3)
         self.assertIsInstance(entries[0], ExpValueEntry)
         self.assertIsInstance(entries[0].to_pyg_data(), Data)

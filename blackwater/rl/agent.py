@@ -1,5 +1,4 @@
 """Agent class for RL."""
-from collections import deque
 from dataclasses import dataclass
 
 from torch.nn import Module
@@ -9,6 +8,8 @@ from blackwater.rl.env import Environment
 
 @dataclass
 class ActionResult:
+    """Action result."""
+
     reward: float
     score: float
     done: bool
