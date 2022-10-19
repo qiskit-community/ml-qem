@@ -2,6 +2,7 @@
 
 https://arxiv.org/pdf/2210.07194.pdf
 """
+import typing
 from dataclasses import dataclass
 from math import sqrt
 from typing import Optional, List, Union, Tuple
@@ -14,20 +15,37 @@ from blackwater.exception import BlackwaterException
 
 @dataclass
 class Trial:
+    """Trial.
+
+    Args:
+        noisy: noisy exp value
+        mitigated: exp value after mitigation
+    """
+
     noisy: float
     mitigated: float
 
 
 @dataclass
 class Problem:
+    """Problem.
+
+    Args:
+        trials: list of trials
+        ideal_exp_value: true exp value
+        circuit: circuit of a problem
+        observable: observable of a problem
+    """
+
     trials: List[Trial]
     ideal_exp_value: float
     circuit: Optional[QuantumCircuit] = None
     observable: Optional[Operator] = None
 
 
+@typing.no_type_check
 def improvement_factor(
-    problems: List[Union[Problem, Tuple[float, List[Tuple[float, float]]]]],
+    problems: Union[List[Problem], List[Tuple[float, List[Tuple[float, float]]]]],
     n_shots: int,
     n_mitigation_shots: int,
 ):
@@ -60,7 +78,7 @@ def improvement_factor(
         raise BlackwaterException("Problem list should not be empty.")
 
     if not isinstance(problems[0], Problem):
-        problems = [
+        problems: List[Problem] = [
             Problem(
                 trials=[
                     Trial(noisy=noisy, mitigated=mitigated)
