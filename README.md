@@ -37,8 +37,8 @@ For information on how to contribute to this project, please take a look at our 
 [1] Qiskit https://qiskit.org/ \
 [2] Qiskit-terra https://github.com/Qiskit/qiskit-terra \
 [3] PyTorch https://pytorch.org/ \
-[4] PyTorch geometric https://pytorch-geometric.readthedocs.io/en/latest/
-
+[4] PyTorch geometric https://pytorch-geometric.readthedocs.io/en/latest/ \
+[5] [Zlatko Minev](https://github.com/zlatko-minev) for :water_polo: :ocean:
 
 ----------------------------------------------------------------------------------------------------
 
