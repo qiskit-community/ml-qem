@@ -1,9 +1,11 @@
 """Agent class for RL."""
+from abc import ABC
 from dataclasses import dataclass
 
 from torch.nn import Module
 
-from blackwater.rl.env import Environment
+
+Model = Module
 
 
 @dataclass
@@ -13,6 +15,26 @@ class ActionResult:
     reward: float
     score: float
     done: bool
+
+
+class Action(ABC):
+    """Base class for actions."""
+
+
+class State(ABC):
+    """Base class for state."""
+
+
+class Environment(ABC):
+    """Environment class for RL algorithms,"""
+
+    def perform_action(self, action: Action) -> ActionResult:
+        """Performs action on environment."""
+        raise NotImplementedError
+
+    def get_state(self) -> State:  # type: ignore
+        """Returns state of environment."""
+        raise NotImplementedError
 
 
 class Agent:
@@ -30,6 +52,6 @@ class Agent:
         """Optimization step."""
         raise NotImplementedError
 
-    def perform_action(self, action) -> ActionResult:
+    def perform_action(self, action: Action) -> ActionResult:
         """Performs action."""
-        raise NotImplementedError
+        return self.env.perform_action(action)
