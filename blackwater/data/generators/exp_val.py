@@ -38,6 +38,13 @@ class ExpValueEntry:
     noisy_exp_value: float
     circuit_depth: int = 0
 
+    def __repr__(self):
+        return (
+            f"<ExpValueEntry ("
+            f"ideal: {self.ideal_exp_value}, "
+            f"noisy: {self.noisy_exp_value})>"
+        )
+
     def to_dict(self):
         """Converts to dict."""
         return {
