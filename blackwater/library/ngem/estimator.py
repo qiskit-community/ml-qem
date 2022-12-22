@@ -1,14 +1,15 @@
 """NGEM estimator."""
 from functools import wraps
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Tuple, List, Union
 
 import numpy as np
 import torch
 from qiskit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
 from qiskit.primitives import BaseEstimator, EstimatorResult
-from qiskit.providers import BackendV1
+from qiskit.providers import BackendV1, JobV1 as Job
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.quantum_info.operators.base_operator import BaseOperator
 
 from blackwater.data.generators.exp_val import ExpValueEntry
 from blackwater.data.utils import (
@@ -19,45 +20,31 @@ from blackwater.data.utils import (
 from blackwater.exception import BlackwaterException
 
 
-def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Callable:
-    """
+class NgemJob(Job):
+    """Ngem wrapper for job results."""
 
-    Args:
-        call: executable function
-        model: pytorch mitigation model
-        backend: backend
-
-    Returns:
-        patched callable funciton
-    """
-
-    @wraps(call)
-    def ngem_call(
+    def __init__(  # pylint: disable=super-init-not-called
         self,
-        circuits: Sequence[QuantumCircuit],
-        observables: Sequence[SparsePauliOp],
-        parameter_values: Sequence[Sequence[float]],
-        **run_options,
-    ) -> EstimatorResult:
+        base_job: Job,
+        model: torch.nn.Module,
+        backend: BackendV1,
+        circuits: Union[QuantumCircuit, List[QuantumCircuit]],
+        observables: Union[PauliSumOp, List[PauliSumOp]],
+    ) -> None:
+        self._base_job: Job = base_job
+        self._model = model
+        self._backend = backend
+        self._circuits = circuits
+        self._observables = observables
 
-        if len(parameter_values) > 0 and any(bool(p) for p in parameter_values):
-            raise BlackwaterException("Parameters are not supported by NGEM yet.")
-
-        result: EstimatorResult = call(
-            self,
-            circuits=circuits,
-            observables=observables,
-            parameter_values=parameter_values,
-            **run_options,
-        )
+    def result(self) -> EstimatorResult:
+        result: EstimatorResult = self._base_job.result()
+        properties = get_backend_properties_v1(self._backend)
 
         mitigated_values = []
-        for value, circuit_idx, obs_idx in zip(
-            result.values.tolist(), circuits, observables
+        for value, circuit, obs in zip(
+            result.values, self._circuits, self._observables
         ):
-            obs = self._observables[obs_idx]
-            circuit = self._circuits[circuit_idx]
-
             if not isinstance(obs, (PauliSumOp, SparsePauliOp)):
                 raise BlackwaterException(
                     "Only `PauliSumOp` observables are supported by NGEM."
@@ -65,7 +52,7 @@ def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Ca
 
             graph_data = circuit_to_graph_data_json(
                 circuit=circuit,
-                properties=get_backend_properties_v1(backend),
+                properties=properties,
                 use_qubit_features=True,
                 use_gate_features=True,
             )
@@ -77,7 +64,7 @@ def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Ca
                 noisy_exp_values=[value],
             ).to_pyg_data()
 
-            mitigated_value = model(
+            mitigated_value = self._model(
                 data.noisy_0,
                 data.observable,
                 data.circuit_depth,
@@ -90,7 +77,46 @@ def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Ca
 
         return EstimatorResult(np.array(mitigated_values), result.metadata)
 
-    return ngem_call
+    def submit(self):
+        return self._base_job.submit()
+
+    def status(self):
+        return self._base_job.status()
+
+    def cancel(self):
+        return self._base_job.cancel()
+
+    def __repr__(self):
+        return f"<NgemJob: {self._base_job.job_id()}>"
+
+
+def patch_run(run: Callable, model: torch.nn.Module, backend: BackendV1) -> Callable:
+    """Wraps run with NGEM mitigation."""
+
+    @wraps(run)
+    def ngem_run(
+        self,
+        circuits: Union[QuantumCircuit, List[QuantumCircuit]],
+        observables: Union[PauliSumOp, List[PauliSumOp]],
+        parameter_values: Tuple[Tuple[float, ...], ...],
+        **run_options,
+    ) -> Job:
+        job: Job = run(
+            self,
+            circuits=circuits,
+            observables=observables,
+            parameter_values=parameter_values,
+            **run_options,
+        )
+        return NgemJob(
+            job,
+            model=model,
+            backend=backend,
+            circuits=circuits,
+            observables=observables,
+        )
+
+    return ngem_run
 
 
 def ngem(
@@ -106,5 +132,7 @@ def ngem(
     Returns:
         NGEM estimator class
     """
-    estimator._call = patch_call(estimator._call, model, backend)
+    estimator._run = patch_run(
+        estimator._run, model, backend
+    )  # pylint: disable=protected-access
     return estimator

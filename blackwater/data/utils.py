@@ -432,7 +432,7 @@ def create_estimator_meas_data(
 def create_meas_data_from_estimators(
     circuits: QuantumCircuit,
     observables: SparsePauliOp,
-    estimators: List[BaseEstimator]
+    estimators: List[BaseEstimator],
 ):
     results = []
     for estimator in estimators:

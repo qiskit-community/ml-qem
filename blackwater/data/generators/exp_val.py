@@ -85,7 +85,7 @@ class ExpValueEntry:
             # noisy=noisy,
             observable=observable,
             circuit_depth=circuit_depth,
-            **noisy
+            **noisy,
         )
 
 
