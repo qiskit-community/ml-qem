@@ -131,3 +131,4 @@ dmypy.json
 .idea/
 
 docs/tutorials/data
+.DS_Store
