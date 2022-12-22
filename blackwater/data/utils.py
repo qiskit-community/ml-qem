@@ -8,6 +8,7 @@ from qiskit.circuit import Qubit
 from qiskit.converters import circuit_to_dag
 from qiskit.dagcircuit import DAGOpNode, DAGInNode, DAGOutNode
 from qiskit.opflow import PauliSumOp
+from qiskit.primitives import BaseEstimator
 from qiskit.providers import BackendV1
 from qiskit.quantum_info import random_pauli_list, SparsePauliOp
 from qiskit_aer import AerSimulator
@@ -416,16 +417,28 @@ def create_estimator_meas_data(
     backend: BackendV1, circuit: QuantumCircuit, observable: PauliSumOp
 ):
     """Runs Aer estimator with noisy and ideal setup."""
-    ideal_estimator = AerEstimator([circuit], [observable])
-    ideal_result = ideal_estimator([circuit], [observable])
-    ideal_exp_value = ideal_result.values[0]
+    ideal_estimator = AerEstimator()
+    ideal_result = ideal_estimator.run([circuit], [observable])
+    ideal_exp_value = ideal_result.result().values[0]
 
-    noisy_estimator = AerEstimator([circuit], [observable])
+    noisy_estimator = AerEstimator()
     noisy_simulator = AerSimulator().from_backend(backend)
     noisy_estimator._backend = noisy_simulator
-    noisy_result = noisy_estimator([circuit], [observable])
-    noisy_exp_value = noisy_result.values[0]
+    noisy_result = noisy_estimator.run([circuit], [observable])
+    noisy_exp_value = noisy_result.result().values[0]
     return ideal_exp_value, noisy_exp_value
+
+
+def create_meas_data_from_estimators(
+    circuits: QuantumCircuit,
+    observables: SparsePauliOp,
+    estimators: List[BaseEstimator]
+):
+    results = []
+    for estimator in estimators:
+        result = estimator.run(circuits, observables).result()
+        results.append(result.values[0])
+    return results
 
 
 def encode_pauli_sum_op(op: Union[PauliSumOp, SparsePauliOp]):

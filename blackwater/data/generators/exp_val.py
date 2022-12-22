@@ -35,14 +35,14 @@ class ExpValueEntry:
     circuit_graph: Dict[str, Any]
     observable: List[List[float]]
     ideal_exp_value: float
-    noisy_exp_value: float
+    noisy_exp_values: List[float]
     circuit_depth: int = 0
 
     def __repr__(self):
         return (
             f"<ExpValueEntry ("
             f"ideal: {self.ideal_exp_value}, "
-            f"noisy: {self.noisy_exp_value})>"
+            f"noisy: {self.noisy_exp_values})>"
         )
 
     def to_dict(self):
@@ -51,7 +51,7 @@ class ExpValueEntry:
             "circuit_graph": self.circuit_graph,
             "observable": self.observable,
             "ideal_exp_value": self.ideal_exp_value,
-            "noisy_exp_value": self.noisy_exp_value,
+            "noisy_exp_values": self.noisy_exp_values,
             "circuit_depth": self.circuit_depth,
         }
 
@@ -69,18 +69,23 @@ class ExpValueEntry:
         edge_index = torch.tensor(g_data["edges"][key]["edge_index"], dtype=torch.long)
         edge_attr = torch.tensor(g_data["edges"][key]["edge_attr"], dtype=torch.float)
         y = torch.tensor([[self.ideal_exp_value]], dtype=torch.float)
-        noisy = torch.tensor([[self.noisy_exp_value]], dtype=torch.float)
+        # noisy = torch.tensor([[self.noisy_exp_value]], dtype=torch.float)
         observable = torch.tensor([self.observable], dtype=torch.float)
         circuit_depth = torch.tensor([[self.circuit_depth]], dtype=torch.float)
+
+        noisy = {}
+        for idx, exp_val in enumerate(self.noisy_exp_values):
+            noisy[f"noisy_{idx}"] = torch.tensor([[exp_val]], dtype=torch.float)
 
         return Data(
             x=x,
             edge_index=edge_index,
             edge_attr=edge_attr,
             y=y,
-            noisy=noisy,
+            # noisy=noisy,
             observable=observable,
             circuit_depth=circuit_depth,
+            **noisy
         )
 
 
@@ -129,5 +134,5 @@ def exp_value_generator(
             circuit_graph=graph_data,
             observable=encode_pauli_sum_op(observable),
             ideal_exp_value=ideal_exp_val,
-            noisy_exp_value=noisy_exp_val,
+            noisy_exp_values=[noisy_exp_val],
         )

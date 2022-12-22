@@ -74,11 +74,11 @@ def patch_call(call: Callable, model: torch.nn.Module, backend: BackendV1) -> Ca
                 circuit_graph=graph_data,
                 observable=encode_pauli_sum_op(obs),
                 ideal_exp_value=0.0,
-                noisy_exp_value=value,
+                noisy_exp_values=[value],
             ).to_pyg_data()
 
             mitigated_value = model(
-                data.noisy,
+                data.noisy_0,
                 data.observable,
                 data.circuit_depth,
                 data.x,
