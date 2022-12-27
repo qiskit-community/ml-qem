@@ -1,12 +1,12 @@
 """NGEM estimator."""
 from functools import wraps
-from typing import Callable, Sequence, Tuple, List, Union
+from typing import Callable, Sequence, Tuple, List, Union, Type
 
 import numpy as np
 import torch
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.opflow import PauliSumOp
-from qiskit.primitives import BaseEstimator, EstimatorResult
+from qiskit.primitives import BaseEstimator, EstimatorResult, Estimator
 from qiskit.providers import BackendV1, JobV1 as Job
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -30,20 +30,22 @@ class NgemJob(Job):
         backend: BackendV1,
         circuits: Union[QuantumCircuit, List[QuantumCircuit]],
         observables: Union[PauliSumOp, List[PauliSumOp]],
+        parameter_values: Tuple[Tuple[float, ...], ...],
     ) -> None:
         self._base_job: Job = base_job
         self._model = model
         self._backend = backend
         self._circuits = circuits
         self._observables = observables
+        self._parameter_values = parameter_values
 
     def result(self) -> EstimatorResult:
         result: EstimatorResult = self._base_job.result()
         properties = get_backend_properties_v1(self._backend)
 
         mitigated_values = []
-        for value, circuit, obs in zip(
-            result.values, self._circuits, self._observables
+        for value, circuit, obs, params in zip(
+            result.values, self._circuits, self._observables, self._parameter_values
         ):
             if not isinstance(obs, (PauliSumOp, SparsePauliOp)):
                 raise BlackwaterException(
@@ -51,7 +53,7 @@ class NgemJob(Job):
                 )
 
             graph_data = circuit_to_graph_data_json(
-                circuit=circuit,
+                circuit=transpile(circuit, self._backend).bind_parameters(params),
                 properties=properties,
                 use_qubit_features=True,
                 use_gate_features=True,
@@ -114,14 +116,13 @@ def patch_run(run: Callable, model: torch.nn.Module, backend: BackendV1) -> Call
             backend=backend,
             circuits=circuits,
             observables=observables,
+            parameter_values=parameter_values,
         )
 
     return ngem_run
 
 
-def ngem(
-    estimator: BaseEstimator, model: torch.nn.Module, backend: BackendV1
-) -> BaseEstimator:
+def ngem(estimator: Type[BaseEstimator], model: torch.nn.Module, backend: BackendV1):
     """Decorator to turn Estimator into NGEM estimator.
 
     Args:

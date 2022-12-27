@@ -4,9 +4,13 @@ from unittest import TestCase, skip
 
 import torch
 from qiskit import transpile
+from qiskit.algorithms.minimum_eigensolvers import VQE, VQEResult
+from qiskit.algorithms.optimizers import SLSQP
 from qiskit.circuit.random import random_circuit
-from qiskit.primitives import Estimator, EstimatorResult
+from qiskit.opflow import I, X, Z
+from qiskit.primitives import Estimator, EstimatorResult, BackendEstimator
 from qiskit.providers.fake_provider import FakeLima
+from qiskit.circuit.library import TwoLocal
 
 from blackwater.data.utils import generate_random_pauli_sum_op
 from blackwater.library.ngem.estimator import ngem
@@ -24,10 +28,6 @@ class DummyModel(torch.nn.Module):
 class TestEstimator(TestCase):
     """Test Ngem estimator."""
 
-    @skip(
-        "Terra 0.22 problem with AerEstimator forces "
-        "us to use terra 0.21 which is not supporting run yet."
-    )
     def test_estimator(self):
         """Tests estimator."""
         model = DummyModel()
@@ -41,3 +41,26 @@ class TestEstimator(TestCase):
         result = estimator.run([circuit], [obs]).result()
 
         self.assertIsInstance(result, EstimatorResult)
+
+    def test_vqe_with_estimator(self):
+        """Tests estimator in VQE."""
+        model = DummyModel()
+        lima = FakeLima()
+
+        operator = (-1.052373245772859 * I ^ I) + \
+                (0.39793742484318045 * I ^ Z) + \
+                (-0.39793742484318045 * Z ^ I) + \
+                (-0.01128010425623538 * Z ^ Z) + \
+                (0.18093119978423156 * X ^ X)
+
+        BackendEstimator()
+
+        ansatz = TwoLocal(rotation_blocks='ry', entanglement_blocks='cz')
+
+        NgemEstimator = ngem(Estimator, model=model, backend=lima)
+        estimator = NgemEstimator()
+
+        slsqp = SLSQP(maxiter=1000)
+        vqe = VQE(estimator, ansatz, slsqp)
+        result = vqe.compute_minimum_eigenvalue(operator)
+        self.assertIsInstance(result, VQEResult)
