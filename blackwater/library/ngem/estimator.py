@@ -1,13 +1,13 @@
 """NGEM estimator."""
 from functools import wraps
-from typing import Callable, Sequence, Tuple, List, Union, Type
+from typing import Callable, Sequence, Tuple, List, Union, Type, Optional
 
 import numpy as np
 import torch
 from qiskit import QuantumCircuit, transpile
 from qiskit.opflow import PauliSumOp
 from qiskit.primitives import BaseEstimator, EstimatorResult, Estimator
-from qiskit.providers import BackendV1, JobV1 as Job
+from qiskit.providers import BackendV1, JobV1 as Job, Options
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 
@@ -31,6 +31,7 @@ class NgemJob(Job):
         circuits: Union[QuantumCircuit, List[QuantumCircuit]],
         observables: Union[PauliSumOp, List[PauliSumOp]],
         parameter_values: Tuple[Tuple[float, ...], ...],
+        options: Optional[Options] = None
     ) -> None:
         self._base_job: Job = base_job
         self._model = model
@@ -38,6 +39,7 @@ class NgemJob(Job):
         self._circuits = circuits
         self._observables = observables
         self._parameter_values = parameter_values
+        self._options = options or Options()
 
     def result(self) -> EstimatorResult:
         result: EstimatorResult = self._base_job.result()
@@ -52,8 +54,12 @@ class NgemJob(Job):
                     "Only `PauliSumOp` observables are supported by NGEM."
                 )
 
+            bound_circuit = transpile(
+                circuit, self._backend, **self._options.__dict__
+            ).bind_parameters(params)
+
             graph_data = circuit_to_graph_data_json(
-                circuit=transpile(circuit, self._backend).bind_parameters(params),
+                circuit=bound_circuit,
                 properties=properties,
                 use_qubit_features=True,
                 use_gate_features=True,
@@ -92,7 +98,12 @@ class NgemJob(Job):
         return f"<NgemJob: {self._base_job.job_id()}>"
 
 
-def patch_run(run: Callable, model: torch.nn.Module, backend: BackendV1) -> Callable:
+def patch_run(
+        run: Callable,
+        model: torch.nn.Module,
+        backend: BackendV1,
+        options: Optional[Options] = None
+) -> Callable:
     """Wraps run with NGEM mitigation."""
 
     @wraps(run)
@@ -117,23 +128,31 @@ def patch_run(run: Callable, model: torch.nn.Module, backend: BackendV1) -> Call
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
+            options=options
         )
 
     return ngem_run
 
 
-def ngem(estimator: Type[BaseEstimator], model: torch.nn.Module, backend: BackendV1):
+def ngem(
+        cls: Type[BaseEstimator],
+        model: torch.nn.Module,
+        backend: BackendV1,
+        options: Optional[Options] = None,
+):
     """Decorator to turn Estimator into NGEM estimator.
 
     Args:
-        estimator: estimator
-        model: NGEM model
+        cls: estimator
+        model: model
         backend: backend
+        options: options
 
     Returns:
         NGEM estimator class
     """
-    estimator._run = patch_run(
-        estimator._run, model, backend
+    new_class: type = type(f"NGEM{cls.__name__}", (cls,), {})
+    new_class._run = patch_run(
+        new_class._run, model, backend, options
     )  # pylint: disable=protected-access
-    return estimator
+    return new_class

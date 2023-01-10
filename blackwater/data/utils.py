@@ -234,18 +234,15 @@ def circuit_to_graph_data_json(
         "DAGOutNode": {},
     }
 
+    circuit_n_qubits = circuit.num_qubits
+
     for node in nodes:
         if isinstance(node, DAGOpNode):
 
             # qubit features
-            qubit_properties: Dict[int, Dict[str, Any]] = {i: {} for i in range(5)}
-            qubit_properties = {
-                **qubit_properties,
-                **{
-                    qubit.index: properties["qubits_props"][qubit.index]
-                    for qubit in node.qargs
-                },
-            }
+            qubit_properties = {i: {} for i in range(3)}  # as 3 is max number of operable gate size
+            for i, qubit in enumerate(node.qargs):
+                qubit_properties[i] = properties["qubits_props"][qubit.index]
 
             t1_vector = [v.get("t1", 0.0) for v in qubit_properties.values()]
             t2_vector = [v.get("t2", 0.0) for v in qubit_properties.values()]
