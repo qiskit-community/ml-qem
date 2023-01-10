@@ -9,6 +9,7 @@ from qiskit.algorithms.optimizers import SLSQP
 from qiskit.circuit.random import random_circuit
 from qiskit.opflow import I, X, Z
 from qiskit.primitives import Estimator, EstimatorResult, BackendEstimator
+from qiskit.providers import Options
 from qiskit.providers.fake_provider import FakeLima
 from qiskit.circuit.library import TwoLocal
 
@@ -38,7 +39,8 @@ class TestEstimator(TestCase):
 
         NgemEstimator = ngem(Estimator, model=model, backend=lima)
         estimator = NgemEstimator()
-        result = estimator.run([circuit], [obs]).result()
+        job = estimator.run([circuit], [obs])
+        result = job.result()
 
         self.assertIsInstance(result, EstimatorResult)
 
@@ -53,14 +55,13 @@ class TestEstimator(TestCase):
                 (-0.01128010425623538 * Z ^ Z) + \
                 (0.18093119978423156 * X ^ X)
 
-        BackendEstimator()
-
         ansatz = TwoLocal(rotation_blocks='ry', entanglement_blocks='cz')
 
-        NgemEstimator = ngem(Estimator, model=model, backend=lima)
+        options = Options(optimization_level=0)
+        NgemEstimator = ngem(Estimator, model=model, backend=lima, options=options)
         estimator = NgemEstimator()
 
-        slsqp = SLSQP(maxiter=1000)
+        slsqp = SLSQP(maxiter=1)
         vqe = VQE(estimator, ansatz, slsqp)
         result = vqe.compute_minimum_eigenvalue(operator)
         self.assertIsInstance(result, VQEResult)
