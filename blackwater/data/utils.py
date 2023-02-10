@@ -241,8 +241,13 @@ def circuit_to_graph_data_json(
 
             # qubit features
             qubit_properties = {i: {} for i in range(3)}  # as 3 is max number of operable gate size
-            for i, qubit in enumerate(node.qargs):
-                qubit_properties[i] = properties["qubits_props"][qubit.index]
+            if node.name != 'barrier' and len(node.qargs) > 3:
+                raise Exception("Non barrier gate that has more than 3 qubits."
+                                "Those tyoe of gates are not supported yet.")
+
+            if node.name != 'barrier':  # barriers are more than 3 qubits
+                for i, qubit in enumerate(node.qargs):
+                    qubit_properties[i] = properties["qubits_props"][qubit.index]
 
             t1_vector = [v.get("t1", 0.0) for v in qubit_properties.values()]
             t2_vector = [v.get("t2", 0.0) for v in qubit_properties.values()]
