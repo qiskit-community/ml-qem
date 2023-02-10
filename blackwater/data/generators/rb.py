@@ -1,6 +1,6 @@
 """Randomised benchmarking data generator."""
 import random
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Iterator
 
 from qiskit import transpile, QuantumCircuit
 from qiskit.providers import BackendV1
@@ -50,7 +50,7 @@ def rb_generator(
     pauli_coeff: float = 1.0,
     lengths: Optional[List[int]] = None,
     num_samples: Optional[int] = None,
-) -> Tuple[ExpValueEntry, QuantumCircuit, Operator]:
+) -> Iterator[Tuple[ExpValueEntry, QuantumCircuit, Operator]]:
     """Generator for RB circuits.
 
     Args:
@@ -91,6 +91,6 @@ def rb_generator(
             circuit_graph=graph_data,
             observable=encode_pauli_sum_op(observable),
             ideal_exp_value=ideal_exp_val,
-            noisy_exp_value=noisy_exp_val,
+            noisy_exp_values=[noisy_exp_val],
             circuit_depth=circuit.depth(),
         ), circuit, observable

@@ -2,8 +2,7 @@ torch>=1.12.1+cpu
 torch-geometric==2.1.0.post1
 torch-sparse==0.6.15
 
-qiskit==0.38.0
 qiskit-aer==0.11.0
-qiskit-ibmq-provider==0.19.2
-qiskit-terra==0.21.2
-qiskit-experiments==0.4.0
+qiskit-ibmq-provider>=0.19.2
+qiskit-terra>=0.23.1
+qiskit-experiments>=0.4.0
