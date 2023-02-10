@@ -4,7 +4,7 @@ on:
   pull_request:
 
 jobs:
-  verify-client:
+  tests_and_linter:
     name: lint, test
 
     runs-on: ubuntu-latest
