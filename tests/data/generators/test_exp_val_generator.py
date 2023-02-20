@@ -22,3 +22,7 @@ class TestExpValDataGenerator(TestCase):
         self.assertEqual(len(entries), 3)
         self.assertIsInstance(entries[0], ExpValueEntry)
         self.assertIsInstance(entries[0].to_pyg_data(), Data)
+
+
+if __name__ == '__main__':
+    TestExpValDataGenerator().test_generator()

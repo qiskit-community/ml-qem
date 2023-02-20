@@ -23,3 +23,7 @@ class TestDataUtils(TestCase):
         self.assertIsInstance(data, Data)
         self.assertEqual(data.x.shape, (5, 34))
         self.assertEqual(data.edge_index.shape, (2, 5))
+
+
+if __name__ == '__main__':
+    TestDataUtils().test_circuit_to_data()
