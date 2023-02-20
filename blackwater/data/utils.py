@@ -16,6 +16,8 @@ from qiskit_aer.primitives import Estimator as AerEstimator
 from torch_geometric.data import Data
 
 # pylint: disable=no-member
+from blackwater.exception import BlackwaterException
+
 available_gate_names = [
     # one qubit gates
     "id",
@@ -234,18 +236,20 @@ def circuit_to_graph_data_json(
         "DAGOutNode": {},
     }
 
-    circuit_n_qubits = circuit.num_qubits
-
     for node in nodes:
         if isinstance(node, DAGOpNode):
 
             # qubit features
-            qubit_properties = {i: {} for i in range(3)}  # as 3 is max number of operable gate size
-            if node.name != 'barrier' and len(node.qargs) > 3:
-                raise Exception("Non barrier gate that has more than 3 qubits."
-                                "Those tyoe of gates are not supported yet.")
+            qubit_properties: Dict[int, Dict[str, Any]] = {
+                i: {} for i in range(3)
+            }  # as 3 is max number of operable gate size
+            if node.name != "barrier" and len(node.qargs) > 3:
+                raise BlackwaterException(
+                    "Non barrier gate that has more than 3 qubits."
+                    "Those tyoe of gates are not supported yet."
+                )
 
-            if node.name != 'barrier':  # barriers are more than 3 qubits
+            if node.name != "barrier":  # barriers are more than 3 qubits
                 for i, qubit in enumerate(node.qargs):
                     qubit_properties[i] = properties["qubits_props"][qubit.index]
 
@@ -415,6 +419,7 @@ def create_counts_meas_data(
     }
 
 
+# pylint: disable=no-value-for-parameter
 def create_estimator_meas_data(
     backend: BackendV1, circuit: QuantumCircuit, observable: PauliSumOp
 ):
@@ -437,6 +442,18 @@ def create_meas_data_from_estimators(
     estimators: List[BaseEstimator],
     **run_params,
 ):
+    """Returns exp values results from given estimators for
+    given circuit and observable.
+
+    Args:
+        circuits: circuit
+        observables: observable
+        estimators: list of esimators to use
+        **run_params: estimator run arguments
+
+    Returns:
+        list of exp values for given estimators
+    """
     results = []
     for estimator in estimators:
         result = estimator.run(circuits, observables, **run_params).result()

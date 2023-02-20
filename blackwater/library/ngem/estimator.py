@@ -1,15 +1,14 @@
 """NGEM estimator."""
 from functools import wraps
-from typing import Callable, Sequence, Tuple, List, Union, Type, Optional
+from typing import Callable, Tuple, List, Union, Type, Optional
 
 import numpy as np
 import torch
 from qiskit import QuantumCircuit, transpile
 from qiskit.opflow import PauliSumOp
-from qiskit.primitives import BaseEstimator, EstimatorResult, Estimator
+from qiskit.primitives import BaseEstimator, EstimatorResult
 from qiskit.providers import BackendV1, JobV1 as Job, Options
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.quantum_info.operators.base_operator import BaseOperator
 
 from blackwater.data.generators.exp_val import ExpValueEntry
 from blackwater.data.utils import (
@@ -31,7 +30,7 @@ class NgemJob(Job):
         circuits: Union[QuantumCircuit, List[QuantumCircuit]],
         observables: Union[PauliSumOp, List[PauliSumOp]],
         parameter_values: Tuple[Tuple[float, ...], ...],
-        options: Optional[Options] = None
+        options: Optional[Options] = None,
     ) -> None:
         self._base_job: Job = base_job
         self._model = model
@@ -99,10 +98,10 @@ class NgemJob(Job):
 
 
 def patch_run(
-        run: Callable,
-        model: torch.nn.Module,
-        backend: BackendV1,
-        options: Optional[Options] = None
+    run: Callable,
+    model: torch.nn.Module,
+    backend: BackendV1,
+    options: Optional[Options] = None,
 ) -> Callable:
     """Wraps run with NGEM mitigation."""
 
@@ -128,17 +127,18 @@ def patch_run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
-            options=options
+            options=options,
         )
 
     return ngem_run
 
 
+# pylint: disable=protected-access
 def ngem(
-        cls: Type[BaseEstimator],
-        model: torch.nn.Module,
-        backend: BackendV1,
-        options: Optional[Options] = None,
+    cls: Type[BaseEstimator],
+    model: torch.nn.Module,
+    backend: BackendV1,
+    options: Optional[Options] = None,
 ):
     """Decorator to turn Estimator into NGEM estimator.
 
@@ -152,7 +152,10 @@ def ngem(
         NGEM estimator class
     """
     new_class: type = type(f"NGEM{cls.__name__}", (cls,), {})
-    new_class._run = patch_run(
-        new_class._run, model, backend, options
-    )  # pylint: disable=protected-access
+    new_class._run = patch_run(  # type: ignore[attr-defined]
+        new_class._run,  # type: ignore[attr-defined]
+        model,
+        backend,
+        options,
+    )
     return new_class
