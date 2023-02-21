@@ -130,5 +130,7 @@ dmypy.json
 
 .idea/
 
-docs/tutorials/data
+docs/tutorials/data/demo_vqe_dataset
+docs/tutorials/data/random
+docs/tutorials/data/haoran_mbl/rc_train/obselete
 .DS_Store
