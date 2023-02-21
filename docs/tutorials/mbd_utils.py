@@ -202,11 +202,10 @@ def cal_all_z_exp(counts):
     all_z_exp = 0
     for key, value in counts.items():
         num_ones = key.count('1')
-        sign = (-1) ** (num_ones) # Sign of the term in 'key' depends on the number of 0's, e.g. '11' is +, '110' is -
+        sign = (-1) ** (num_ones)  # Sign of the term in 'key' depends on the number of 0's, e.g. '11' is +, '110' is -
         all_z_exp += sign * value
     all_z_exp = all_z_exp / shots
     return all_z_exp
-
 
 
 def construct_mbl_circuit(num_qubit, disorder, theta, steps):
@@ -230,14 +229,14 @@ def construct_mbl_circuit(num_qubit, disorder, theta, steps):
     for step in range(steps):
         # Interactions between even layers
         for even_qubit in range(0, num_qubit, 2):
-            qc.append(CZGate(), (even_qubit, even_qubit+1))
+            qc.append(CZGate(), (even_qubit, even_qubit + 1))
             qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
-            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit+1])
+            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
         # Interactions between odd layers
-        for odd_qubit in range(1, num_qubit-1, 2):
-            qc.append(CZGate(), (odd_qubit, odd_qubit+1))
+        for odd_qubit in range(1, num_qubit - 1, 2):
+            qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
             qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
-            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit+1])
+            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
         # Apply RZ disorder
         for q in range(num_qubit):
             qc.append(PhaseGate(disorder[q]), [q])
@@ -247,7 +246,8 @@ def construct_mbl_circuit(num_qubit, disorder, theta, steps):
 
     return qc
 
-def generate_disorder(n_qubits, disorder_strength = np.pi, seed=0):
+
+def generate_disorder(n_qubits, disorder_strength=np.pi, seed=0):
     """Generate disorder
 
     Args:
