@@ -28,7 +28,7 @@ from blackwater.data.generators.exp_val import exp_value_generator
 from blackwater.data.utils import generate_random_pauli_sum_op
 from blackwater.library.ngem.estimator import ngem
 
-from qiskit.quantum_info import random_clifford
+from qiskit.quantum_info import random_clifford, Clifford
 
 import random
 from qiskit.circuit.library import HGate, SdgGate
@@ -66,6 +66,95 @@ from torch_geometric.utils import to_dense_adj, to_dense_batch
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import U3Gate, CZGate, PhaseGate, CXGate
+
+import numpy as np
+
+from qiskit.circuit import QuantumRegister, ClassicalRegister, QuantumCircuit
+from qiskit.circuit import Reset
+from qiskit.circuit.library.standard_gates import (
+    IGate,
+    XGate,
+    YGate,
+    ZGate,
+    HGate,
+    SGate,
+    SdgGate,
+    CXGate,
+    CYGate,
+    CZGate,
+    SwapGate,
+)
+from qiskit.circuit.exceptions import CircuitError
+
+
+def random_clifford_circuit(
+        num_qubits, depth, max_operands=2, reset=False, seed=None
+):
+    """Generate random circuit of arbitrary size and form.
+
+    This function will generate a random circuit by randomly selecting gates
+    from the set of Clifford gates.
+
+    Args:
+        num_qubits (int): number of quantum wires
+        depth (int): layers of operations (i.e. critical path length)
+        max_operands (int): maximum operands of each gate (between 1 and 3)
+        reset (bool): if True, insert middle resets
+        seed (int): sets random seed (optional)
+
+    Returns:
+        QuantumCircuit: constructed circuit
+
+    Raises:
+        CircuitError: when invalid options given
+    """
+    if max_operands < 1 or max_operands > 2:
+        raise CircuitError("max_operands must be 1 or 2")
+
+    one_q_ops = [
+        IGate,
+        XGate,
+        YGate,
+        ZGate,
+        HGate,
+        SGate,
+        SdgGate,
+    ]
+    one_param = []
+    two_param = []
+    three_param = []
+    two_q_ops = [CXGate, CYGate, CZGate, SwapGate]
+    three_q_ops = []
+
+    qr = QuantumRegister(num_qubits, "q")
+    qc = QuantumCircuit(num_qubits)
+
+    if reset:
+        one_q_ops += [Reset]
+
+    if seed is None:
+        seed = np.random.randint(0, np.iinfo(np.int32).max)
+    rng = np.random.default_rng(seed)
+
+    # apply arbitrary random operations at every depth
+    for _ in range(depth):
+        # choose either 1, 2, or 3 qubits for the operation
+        remaining_qubits = list(range(num_qubits))
+        rng.shuffle(remaining_qubits)
+        while remaining_qubits:
+            max_possible_operands = min(len(remaining_qubits), max_operands)
+            num_operands = rng.choice(range(max_possible_operands)) + 1
+            operands = [remaining_qubits.pop() for _ in range(num_operands)]
+            if num_operands == 1:
+                operation = rng.choice(one_q_ops)
+            elif num_operands == 2:
+                operation = rng.choice(two_q_ops)
+            register_operands = [qr[i] for i in operands]
+            op = operation()
+
+            qc.append(op, register_operands)
+
+    return Clifford(qc)
 
 
 def force_nonzero_expectation(clifford, print_bool=False):
@@ -120,8 +209,8 @@ def force_nonzero_expectation(clifford, print_bool=False):
     return qc_forced, expectation
 
 
-def construct_random_clifford(num_qubit):
-    rc = random_clifford(num_qubit)
+def construct_random_clifford(num_qubit, depth, max_operands=2):
+    rc = random_clifford_circuit(num_qubit, depth, max_operands=max_operands)
 
     try:
         rc_forced, _ = force_nonzero_expectation(rc)
