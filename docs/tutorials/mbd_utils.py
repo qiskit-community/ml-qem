@@ -1,5 +1,6 @@
 import json
 import glob
+import copy
 
 import numpy as np
 import pandas as pd
@@ -154,7 +155,61 @@ def random_clifford_circuit(
 
             qc.append(op, register_operands)
 
-    return Clifford(qc)
+    return qc
+
+
+def force_nonzero_expectation_from_clifford_circuit(clifford_circuit, print_bool=False):
+    """Force the input Clifford `QuantumCircuit` to have a non-zero expectation value when measured in the all-Z basis.
+
+    Args:
+        clifford (QuantumCircuit): Clifford as a QuantumCircuit.
+        print (bool, optional): Print the chosen random stabilizer.
+    """
+    # Convert the Clifford circuit into a `Clifford` object
+    clifford = Clifford(clifford_circuit)
+    # Copy the Clifford circuit into the quantum circuit that will be returned
+    qc_forced = copy.deepcopy(clifford_circuit)
+
+    # Get the stabilizers as a list of strings.
+    # An example of a stabilizer string is "+XYZ"
+    # with sign "+" and "Z" on qubit 1.
+    stabilizers = clifford.to_dict()['stabilizer']
+    for idx, stab in enumerate(stabilizers):
+        # This method of forcing the Clifford operator to have
+        # non-zero expectation in the all-Z basis only works
+        # if the chosen stabilizer has no identity matrices.
+        if 'I' not in stab:
+            stabilizer = stab
+            break
+        # If we have tried every stabilizer, throw an exception
+        if idx >= len(stabilizers)-1:
+            raise UserWarning("All of the stabilizers have the identity matrix I!")
+    if print_bool:
+        print(f'Stabilizer: {stabilizer}')
+
+    # Since the Clifford circuit has no classical register, add one
+    # cr = ClassicalRegister(qc_forced.num_qubits)
+    # qc_forced.add_register(cr)
+
+    # Change the measurement basis of each qubit
+    for qubit in range(0, qc_forced.num_qubits):
+        op = stabilizer[qc_forced.num_qubits-qubit]
+        if op == 'X':
+            qc_forced.append(HGate(), [[qubit]]) # Convert to x-basis measurement
+        elif op == 'Y':
+            qc_forced.append(SdgGate(), [[qubit]])
+            qc_forced.append(HGate(), [[qubit]])
+        # # Measure qubit and store in classical bit
+        # if measure and op != 'I':
+        #     qc_forced.measure([qubit], [qubit])
+
+    # Compute the expectation value based on the sign of the stabilizer
+    if stabilizer[0] == '+':
+        expectation = 1
+    elif stabilizer[0] == '-':
+        expectation = -1
+
+    return qc_forced, expectation
 
 
 def force_nonzero_expectation(clifford, print_bool=False):
@@ -211,14 +266,16 @@ def force_nonzero_expectation(clifford, print_bool=False):
 
 def construct_random_clifford(num_qubit, depth, max_operands=2):
     rc = random_clifford_circuit(num_qubit, depth, max_operands=max_operands)
+    enforced = True
 
     try:
-        rc_forced, _ = force_nonzero_expectation(rc)
+        rc_forced, _ = force_nonzero_expectation_from_clifford_circuit(rc)
     except UserWarning:
-        rc_forced = rc.to_circuit()
+        rc_forced = rc
+        enforced = False
 
     rc_forced.measure_all()
-    return rc_forced, rc.to_circuit()
+    return rc_forced, enforced
 
 
 def cal_z_exp(counts):
