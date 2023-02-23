@@ -88,9 +88,7 @@ from qiskit.circuit.library.standard_gates import (
 from qiskit.circuit.exceptions import CircuitError
 
 
-def random_clifford_circuit(
-        num_qubits, depth, max_operands=2, reset=False, seed=None
-):
+def random_clifford_circuit(num_qubits, depth, max_operands=2, reset=False, seed=None):
     """Generate random circuit of arbitrary size and form.
 
     This function will generate a random circuit by randomly selecting gates
