@@ -401,6 +401,6 @@ def generate_disorder(n_qubits, disorder_strength=np.pi, seed=0):
     Returns:
         List[float]: List of angles in single-qubit phase gates that correspond to disorders
     """
-    random.seed(seed)
+    np.random.seed(seed)
     disorder = [np.random.uniform(-1 * disorder_strength, disorder_strength) for _ in range(n_qubits)]
     return disorder
