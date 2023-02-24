@@ -8,6 +8,10 @@ with open("README.md", encoding="utf-8") as f:
 with open("requirements.txt") as f:
     install_requires = f.read().splitlines()
 
+with open("requirements-graph.txt") as f:
+    graph_requires = f.read().splitlines()
+
+
 version_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "blackwater", "VERSION.txt")
 )
@@ -23,6 +27,9 @@ setuptools.setup(
     keywords="quantum ml qiskit error correction mitigation",
     packages=setuptools.find_packages(),
     install_requires=install_requires,
+    extra_requires={
+        "graph": graph_requires
+    },
     python_requires=">=3.7",
     version=version,
     classifiers=[
