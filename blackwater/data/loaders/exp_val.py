@@ -53,7 +53,9 @@ class CircuitGraphExpValMitigationDataset(Dataset):
                     pass
 
     def len(self):
+        """Number of entries."""
         return len(self.entries)
 
     def get(self, idx):
+        """Get specific entry."""
         return self.entries[idx]
