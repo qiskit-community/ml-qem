@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Union, List, Dict, Optional
 
 from qiskit.circuit import Qubit
+from qiskit.circuit.library import HGate, get_standard_gate_name_mapping
 from qiskit.dagcircuit import DAGNode, DAGOpNode
 from qiskit.providers import BackendV1, BackendV2, QubitProperties
 from qiskit.transpiler import Target
@@ -11,6 +12,7 @@ from blackwater.exception import BlackwaterException
 
 
 N_QUBIT_PROPERTIES = 3
+ALL_INSTRUCTIONS = get_standard_gate_name_mapping().keys()
 
 
 class NodeEncoder(ABC):
@@ -20,7 +22,9 @@ class NodeEncoder(ABC):
 
 class DefaultNodeEncoder(NodeEncoder):
     def __init__(self,
-                 available_instructions: List[str]):
+                 available_instructions: Optional[List[str]] = None):
+        available_instructions = available_instructions or ALL_INSTRUCTIONS
+
         default_instructions = ["barrier", "measure", "reset"]
         for inst in default_instructions:
             if inst not in available_instructions:

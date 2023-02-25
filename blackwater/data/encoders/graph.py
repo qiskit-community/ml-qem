@@ -16,7 +16,7 @@ from ...exception import BlackwaterException
 class GraphData:
     nodes: List[List[float]]
     edges: List[List[float]]
-    edge_features: Optional[List[List[float]]] = None
+    edge_features: List[List[float]]
 
 
 def circuit_to_json_graph(
@@ -35,7 +35,6 @@ def circuit_to_json_graph(
     node_encoder = node_encoder or DefaultNodeEncoder(available_instructions)
     node_types_to_encode: List[type] = node_types_to_encode or [DAGOpNode]
 
-    # convert to dag_circuit
     dag_circuit = circuit_to_dag(circuit)
 
     nodes_map: Dict[str, List[float]] = {
@@ -54,9 +53,14 @@ def circuit_to_json_graph(
            and isinstance(dst, tuple(node_types_to_encode))
     ]
 
+    edge_features = [
+        [0.] for _ in range(len(edges))
+    ]
+
     return GraphData(
         nodes=list(nodes_map.values()),
-        edges=edges
+        edges=edges,
+        edge_features=edge_features
     )
 
 
@@ -78,7 +82,12 @@ def backend_to_json_graph(backend: Union[BackendV1, BackendV2]) -> GraphData:
         if len(qubits) == 2
     ]
 
+    edge_features = [
+        [0.] for _ in range(len(edges))
+    ]
+
     return GraphData(
         nodes=nodes,
-        edges=edges
+        edges=edges,
+        edge_features=edge_features
     )

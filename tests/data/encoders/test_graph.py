@@ -37,7 +37,8 @@ class TestGraphEncoders(TestCase):
                 [0, 0, 0, 1, 0, 0.0, 0.0, 0.0],
                 [0, 0, 0, 1, 0, 0.0, 0.0, 0.0]
             ],
-            edges=[[0, 1], [1, 2], [1, 2], [2, 4], [2, 3]]
+            edges=[[0, 1], [1, 2], [1, 2], [2, 4], [2, 3]],
+            edge_features=[[0.], [0.], [0.], [0.], [0.]]
         )
         self.assertEqual(expecting, encoded_circuit_json)
 
