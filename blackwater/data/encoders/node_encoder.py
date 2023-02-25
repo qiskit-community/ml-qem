@@ -12,7 +12,7 @@ from blackwater.exception import BlackwaterException
 
 
 N_QUBIT_PROPERTIES = 3
-ALL_INSTRUCTIONS = get_standard_gate_name_mapping().keys()
+ALL_INSTRUCTIONS = list(get_standard_gate_name_mapping().keys())
 
 
 class NodeEncoder(ABC):

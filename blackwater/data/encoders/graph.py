@@ -25,14 +25,7 @@ def circuit_to_json_graph(
         node_types_to_encode: Optional[List[type]] = None,
         node_encoder: Optional[NodeEncoder] = None
 ) -> GraphData:
-    if available_instructions is None and node_encoder is None:
-        raise BlackwaterException(
-            "Please provide list of `available_instructions` "
-            "to properly encode data of circuit "
-            "or `node_encoder` to encode node data."
-        )
-
-    node_encoder = node_encoder or DefaultNodeEncoder(available_instructions)
+    node_encoder = node_encoder or DefaultNodeEncoder(available_instructions=available_instructions)
     node_types_to_encode: List[type] = node_types_to_encode or [DAGOpNode]
 
     dag_circuit = circuit_to_dag(circuit)

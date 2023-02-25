@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Optional, List, Union
 
 import torch
@@ -13,7 +13,25 @@ from .encoders.operator import OperatorData
 from .encoders.operator import encode_operator
 
 
-class PygData:
+@dataclass
+class BlackwaterData:
+    def serialize(self) -> dict:
+        raise NotImplementedError
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        raise NotImplementedError
+
+
+@dataclass
+class PygData(BlackwaterData):
+    @classmethod
+    def deserialize(cls, data: dict):
+        raise NotImplementedError
+
+    def serialize(self) -> dict:
+        return asdict(self)
+
     def to_pyg(self) -> Data:
         raise NotImplementedError
 
@@ -75,3 +93,15 @@ class ExpValData(PygData):
             circuit_depth=circuit_depth,
             **optional_data,
         )
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        entry_data = {}
+        for key, value in data.items():
+            if key in ["circuit", "backend"]:
+                entry_data[key] = GraphData(**value)
+            elif key in ["observable"]:
+                entry_data[key] = OperatorData(**value)
+            else:
+                entry_data[key] = value
+        return cls(**entry_data)
