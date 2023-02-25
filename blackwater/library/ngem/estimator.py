@@ -7,15 +7,10 @@ import torch
 from qiskit import QuantumCircuit, transpile
 from qiskit.opflow import PauliSumOp
 from qiskit.primitives import BaseEstimator, EstimatorResult
-from qiskit.providers import BackendV1, JobV1 as Job, Options
+from qiskit.providers import JobV1 as Job, Options, BackendV2
 from qiskit.quantum_info import SparsePauliOp
 
-from blackwater.data.generators.exp_val import ExpValueEntry
-from blackwater.data.utils import (
-    circuit_to_graph_data_json,
-    get_backend_properties_v1,
-    encode_pauli_sum_op,
-)
+from blackwater.data import ExpValData
 from blackwater.exception import BlackwaterException
 
 
@@ -26,10 +21,11 @@ class NgemJob(Job):
         self,
         base_job: Job,
         model: torch.nn.Module,
-        backend: BackendV1,
+        backend: BackendV2,
         circuits: Union[QuantumCircuit, List[QuantumCircuit]],
         observables: Union[PauliSumOp, List[PauliSumOp]],
         parameter_values: Tuple[Tuple[float, ...], ...],
+        skip_transpile: bool,
         options: Optional[Options] = None,
     ) -> None:
         self._base_job: Job = base_job
@@ -39,10 +35,10 @@ class NgemJob(Job):
         self._observables = observables
         self._parameter_values = parameter_values
         self._options = options or Options()
+        self._skip_transpile = skip_transpile
 
     def result(self) -> EstimatorResult:
         result: EstimatorResult = self._base_job.result()
-        properties = get_backend_properties_v1(self._backend)
 
         mitigated_values = []
         for value, circuit, obs, params in zip(
@@ -53,30 +49,29 @@ class NgemJob(Job):
                     "Only `PauliSumOp` observables are supported by NGEM."
                 )
 
-            bound_circuit = transpile(
-                circuit, self._backend, **self._options.__dict__
-            ).bind_parameters(params)
+            if self._skip_transpile:
+                bound_circuit = circuit.bind_parameters(params)
+            else:
+                bound_circuit = transpile(
+                    circuit, self._backend, **self._options.__dict__
+                ).bind_parameters(params)
 
-            graph_data = circuit_to_graph_data_json(
+            data = ExpValData.build(
                 circuit=bound_circuit,
-                properties=properties,
-                use_qubit_features=True,
-                use_gate_features=True,
+                expectation_values=[value],
+                observable=obs,
+                backend=self._backend,
+            ).to_pyg()
+
+            noisy_exp_val, _ = torch.tensor_split(  # pylint: disable=no-member
+                data.y, 2, dim=1
             )
-
-            data = ExpValueEntry(
-                circuit_graph=graph_data,
-                observable=encode_pauli_sum_op(obs),
-                ideal_exp_value=0.0,
-                noisy_exp_values=[value],
-            ).to_pyg_data()
-
             mitigated_value = self._model(
-                data.noisy_0,
-                data.observable,
-                data.circuit_depth,
                 data.x,
                 data.edge_index,
+                noisy_exp_val,
+                data.observable,
+                data.circuit_depth,
                 data.batch,
             ).item()
 
@@ -100,7 +95,8 @@ class NgemJob(Job):
 def patch_run(
     run: Callable,
     model: torch.nn.Module,
-    backend: BackendV1,
+    backend: BackendV2,
+    skip_transpile: bool,
     options: Optional[Options] = None,
 ) -> Callable:
     """Wraps run with NGEM mitigation."""
@@ -127,6 +123,7 @@ def patch_run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
+            skip_transpile=skip_transpile,
             options=options,
         )
 
@@ -137,7 +134,8 @@ def patch_run(
 def ngem(
     cls: Type[BaseEstimator],
     model: torch.nn.Module,
-    backend: BackendV1,
+    backend: BackendV2,
+    skip_transpile: bool = False,
     options: Optional[Options] = None,
 ):
     """Decorator to turn Estimator into NGEM estimator.
@@ -146,6 +144,7 @@ def ngem(
         cls: estimator
         model: model
         backend: backend
+        skip_transpile: skip transpilation
         options: options
 
     Returns:
@@ -156,6 +155,7 @@ def ngem(
         new_class._run,  # type: ignore[attr-defined]
         model,
         backend,
+        skip_transpile,
         options,
     )
     return new_class
