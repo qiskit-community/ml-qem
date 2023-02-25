@@ -73,7 +73,7 @@ class TestGraphEncoders(TestCase):
         self.assertIsInstance(encoded_circuit_json, GraphData)
         self.assertEqual(len(encoded_circuit_json.nodes), 11)
         self.assertEqual(len(encoded_circuit_json.edges), 14)
-        self.assertEqual(len(encoded_circuit_json.nodes[0]), 27)
+        self.assertEqual(len(encoded_circuit_json.nodes[0]), 22)
 
     def test_backend_encoder_base(self):
         """Tests backend encoding."""

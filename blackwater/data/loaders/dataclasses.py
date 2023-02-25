@@ -9,7 +9,7 @@ from blackwater.data.dataclasses import ExpValData
 from blackwater.data.io.io import ExpValDataReader
 
 
-class ExpValDataLoader(Dataset):
+class ExpValDataSet(Dataset):
     """ExpValDataLoader."""
 
     def __init__(

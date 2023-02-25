@@ -30,6 +30,6 @@ class TestDataClasses(TestCase):
 
         pyg_data = exp_val_data.to_pyg()
         self.assertIsInstance(pyg_data, Data)
-        self.assertEqual(list(pyg_data.x.shape), [9, 27])
+        self.assertEqual(list(pyg_data.x.shape), [9, 22])
         self.assertEqual(list(pyg_data.edge_index.shape), [2, 10])
         self.assertEqual(list(pyg_data.edge_attr.shape), [10, 1])

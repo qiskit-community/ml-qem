@@ -11,7 +11,7 @@ from qiskit.transpiler import Target
 
 from blackwater.exception import BlackwaterException
 
-N_QUBIT_PROPERTIES = 3
+N_QUBIT_PROPERTIES = 2
 ALL_INSTRUCTIONS = list(get_standard_gate_name_mapping().keys())
 
 
@@ -98,7 +98,7 @@ def extract_properties_from_backend(
                 and isinstance(qprops.t2, (float, int))
                 and isinstance(qprops.frequency, (float, int))
             ):
-                qubit_properties_map[idx] = [qprops.t1, qprops.t2, qprops.frequency]
+                qubit_properties_map[idx] = [qprops.t1, qprops.t2]
             else:
                 qubit_properties_map[idx] = [0.0] * N_QUBIT_PROPERTIES
 
