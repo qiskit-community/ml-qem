@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Union, List
 
 from qiskit.opflow import PauliSumOp
-from qiskit.quantum_info import SparsePauliOp, Operator
+from qiskit.quantum_info import SparsePauliOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 
 from blackwater.exception import BlackwaterException
@@ -11,10 +11,20 @@ from blackwater.exception import BlackwaterException
 
 @dataclass
 class OperatorData:
+    """OperatorData."""
+
     operator: List[List[float]]
 
 
 def encode_pauli_sum_operator(operator: PauliSumOp) -> List[List[float]]:
+    """Encodes PauliSumOp
+
+    Args:
+        operator: PauliSumOp
+
+    Returns:
+        Encoded operator
+    """
     mapping = {
         "X": [0, 0, 0, 1],
         "Y": [0, 0, 1, 0],
@@ -33,10 +43,26 @@ def encode_pauli_sum_operator(operator: PauliSumOp) -> List[List[float]]:
 
 
 def encode_sparse_pauli_operatpr(operator: SparsePauliOp) -> List[List[float]]:
+    """Encodes SparsePauliOp
+
+    Args:
+        operator: SparsePauliOp
+
+    Returns:
+        Encoded operator
+    """
     return encode_pauli_sum_operator(PauliSumOp.from_list(operator.to_list()))
 
 
 def encode_operator(operator: Union[BaseOperator]) -> OperatorData:
+    """Encodes BaseOperator
+
+    Args:
+        operator: BaseOperator
+
+    Returns:
+        Encoded operator
+    """
     if isinstance(operator, SparsePauliOp):
         result = encode_sparse_pauli_operatpr(operator)
     elif isinstance(operator, PauliSumOp):

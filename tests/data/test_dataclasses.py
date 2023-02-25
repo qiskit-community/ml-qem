@@ -22,9 +22,9 @@ class TestDataClasses(TestCase):
 
         exp_val_data = ExpValData.build(
             circuit=transpiled_circuit,
-            expectation_values=[0.],
+            expectation_values=[0.0],
             observable=SparsePauliOp(["ZZZ"]),
-            backend=fake_lima
+            backend=fake_lima,
         )
         self.assertIsInstance(exp_val_data, ExpValData)
 

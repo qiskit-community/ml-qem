@@ -1,3 +1,4 @@
+"""Dataclasses module."""
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Union
 
@@ -13,18 +14,25 @@ from .encoders.operator import OperatorData
 from .encoders.operator import encode_operator
 
 
+# pylint: disable=no-member
 @dataclass
 class BlackwaterData:
+    """BlackwaterData."""
+
     def serialize(self) -> dict:
+        """Serialize class data to dictionary"""
         raise NotImplementedError
 
     @classmethod
     def deserialize(cls, data: dict):
+        """Deserializes data to class."""
         raise NotImplementedError
 
 
 @dataclass
 class PygData(BlackwaterData):
+    """PygData."""
+
     @classmethod
     def deserialize(cls, data: dict):
         raise NotImplementedError
@@ -33,11 +41,14 @@ class PygData(BlackwaterData):
         return asdict(self)
 
     def to_pyg(self) -> Data:
+        """Converts to pytorch_geometric.Data object."""
         raise NotImplementedError
 
 
 @dataclass
 class ExpValData(PygData):
+    """ExpValData."""
+
     circuit: GraphData
     circuit_depth: int
     expectation_values: List[float]
@@ -45,12 +56,27 @@ class ExpValData(PygData):
     backend: Optional[GraphData] = None
 
     @classmethod
-    def build(cls,
-              circuit: QuantumCircuit,
-              expectation_values: List[float],
-              observable: Optional[BaseOperator] = None,
-              backend: Optional[Union[BackendV1, BackendV2]] = None):
-        node_encoder = DefaultNodeEncoder() if backend is None else BackendNodeEncoder(backend)
+    def build(
+        cls,
+        circuit: QuantumCircuit,
+        expectation_values: List[float],
+        observable: Optional[BaseOperator] = None,
+        backend: Optional[Union[BackendV1, BackendV2]] = None,
+    ):
+        """Constructs ExpValData from Qiskit classes.
+
+        Args:
+            circuit: circuit
+            expectation_values: list of expectation values
+            observable: observable
+            backend: backend
+
+        Returns:
+            ExpValData object
+        """
+        node_encoder = (
+            DefaultNodeEncoder() if backend is None else BackendNodeEncoder(backend)
+        )
         encoded_observable = None
         if observable is not None:
             encoded_observable = encode_operator(observable)
@@ -64,26 +90,38 @@ class ExpValData(PygData):
             circuit_depth=circuit.depth(),
             expectation_values=expectation_values,
             observable=encoded_observable,
-            backend=encoded_backend
+            backend=encoded_backend,
         )
 
     def to_pyg(self):
         optional_data = {}
 
         circuit_nodes = torch.tensor(self.circuit.nodes, dtype=torch.float)
-        circuit_edges = torch.transpose(torch.tensor(self.circuit.edges, dtype=torch.long), 0, 1)
-        circuit_edge_features = torch.tensor(self.circuit.edge_features, dtype=torch.float)
+        circuit_edges = torch.transpose(
+            torch.tensor(self.circuit.edges, dtype=torch.long), 0, 1
+        )
+        circuit_edge_features = torch.tensor(
+            self.circuit.edge_features, dtype=torch.float
+        )
         circuit_depth = torch.tensor([[self.circuit_depth]], dtype=torch.float)
 
         expectation_values = torch.tensor([self.expectation_values], dtype=torch.float)
 
         if self.observable is not None:
-            optional_data["observable"] = torch.tensor([self.observable.operator], dtype=torch.float)
+            optional_data["observable"] = torch.tensor(
+                [self.observable.operator], dtype=torch.float
+            )
 
         if self.backend is not None:
-            optional_data["backend_nodes"] = torch.tensor(self.backend.nodes, dtype=torch.float)
-            optional_data["backend_edges"] = torch.transpose(torch.tensor(self.backend.edges, dtype=torch.float), 0, 1)
-            optional_data["backend_edge_features"] = torch.tensor(self.backend.edge_features, dtype=torch.float)
+            optional_data["backend_nodes"] = torch.tensor(
+                self.backend.nodes, dtype=torch.float
+            )
+            optional_data["backend_edges"] = torch.transpose(
+                torch.tensor(self.backend.edges, dtype=torch.float), 0, 1
+            )
+            optional_data["backend_edge_features"] = torch.tensor(
+                self.backend.edge_features, dtype=torch.float
+            )
 
         return Data(
             x=circuit_nodes,
@@ -101,7 +139,7 @@ class ExpValData(PygData):
             if key in ["circuit", "backend"]:
                 entry_data[key] = GraphData(**value)
             elif key in ["observable"]:
-                entry_data[key] = OperatorData(**value)
+                entry_data[key] = OperatorData(**value)  # type: ignore[assignment]
             else:
                 entry_data[key] = value
-        return cls(**entry_data)
+        return cls(**entry_data)  # type: ignore[arg-type]

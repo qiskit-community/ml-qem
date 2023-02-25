@@ -4,11 +4,26 @@ from unittest import TestCase
 from qiskit import QuantumCircuit, transpile
 from qiskit.providers.fake_provider import FakeLimaV2
 
-from blackwater.data.encoders.graph import circuit_to_json_graph, backend_to_json_graph, GraphData
+from blackwater.data.encoders.graph import (
+    circuit_to_json_graph,
+    backend_to_json_graph,
+    GraphData,
+)
 from blackwater.data.encoders.node_encoder import BackendNodeEncoder
 
 
-def create_bell_circuit(num_qubits: int = 2, insert_barriers: bool = False) -> QuantumCircuit:
+def create_bell_circuit(
+    num_qubits: int = 2, insert_barriers: bool = False
+) -> QuantumCircuit:
+    """Creates bell state circuit.
+
+    Args:
+        num_qubits: number of circuits
+        insert_barriers: insert barriers
+
+    Returns:
+        bell state circuit
+    """
     circuit = QuantumCircuit(num_qubits)
     circuit.h(0)
     if insert_barriers:
@@ -28,17 +43,19 @@ class TestGraphEncoders(TestCase):
         """Tests circuit encoder."""
         circuit = create_bell_circuit()
 
-        encoded_circuit_json = circuit_to_json_graph(circuit, available_instructions=["h", "cx"])
+        encoded_circuit_json = circuit_to_json_graph(
+            circuit, available_instructions=["h", "cx"]
+        )
         expecting = GraphData(
             nodes=[
                 [1, 0, 0, 0, 0, 0.0, 0.0, 0.0],
                 [0, 1, 0, 0, 0, 0.0, 0.0, 0.0],
                 [0, 0, 1, 0, 0, 0.0, 0.0, 0.0],
                 [0, 0, 0, 1, 0, 0.0, 0.0, 0.0],
-                [0, 0, 0, 1, 0, 0.0, 0.0, 0.0]
+                [0, 0, 0, 1, 0, 0.0, 0.0, 0.0],
             ],
             edges=[[0, 1], [1, 2], [1, 2], [2, 4], [2, 3]],
-            edge_features=[[0.], [0.], [0.], [0.], [0.]]
+            edge_features=[[0.0], [0.0], [0.0], [0.0], [0.0]],
         )
         self.assertEqual(expecting, encoded_circuit_json)
 
@@ -51,8 +68,7 @@ class TestGraphEncoders(TestCase):
 
         backend_node_encoder = BackendNodeEncoder(fake_lima)
         encoded_circuit_json = circuit_to_json_graph(
-            transpiled_circuit,
-            node_encoder=backend_node_encoder
+            transpiled_circuit, node_encoder=backend_node_encoder
         )
         self.assertIsInstance(encoded_circuit_json, GraphData)
         self.assertEqual(len(encoded_circuit_json.nodes), 11)
