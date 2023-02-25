@@ -130,5 +130,5 @@ dmypy.json
 
 .idea/
 
-docs/tutorials/data
+docs/tutorials/legacy/paper/data
 .DS_Store
