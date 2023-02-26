@@ -69,7 +69,8 @@ class ExpValCircuitGraphModel(torch.nn.Module):
     def __init__(
             self,
             num_node_features: int,
-            hidden_channels: int
+            hidden_channels: int,
+            exp_value_size: int = 4
     ):
         super().__init__()
 
@@ -88,9 +89,9 @@ class ExpValCircuitGraphModel(torch.nn.Module):
         self.pooling2 = ASAPooling(hidden_channels * 2, 0.5)
 
         self.body_seq = torch.nn.Sequential(
-            Linear(hidden_channels * 2 + 5, hidden_channels),
+            Linear(hidden_channels * 2 + 1 + exp_value_size, hidden_channels),
             torch.nn.Dropout(0.2),
-            Linear(hidden_channels, 4)
+            Linear(hidden_channels, exp_value_size)
         )
 
     def forward(self,
@@ -116,3 +117,103 @@ class ExpValCircuitGraphModel(torch.nn.Module):
         ), dim=1)
 
         return self.body_seq(merge)
+
+
+
+
+if __name__ == "__main__":
+    train_paths = [
+        './data/tiling/q0-q3_total8.json',
+    ]
+
+    val_paths = [
+        f'./data/mbd_datasets/val/step_{i}.json' for i in range(10)
+    ]
+
+    BATCH_SIZE = 32
+
+    train_loader = DataLoader(
+        CircuitGraphExpValMitigationDataset(
+            train_paths,
+        ),
+        batch_size=BATCH_SIZE,
+        shuffle=True
+    )
+
+    val_loader = DataLoader(
+        CircuitGraphExpValMitigationDataset(
+            val_paths,
+        ),
+        batch_size=BATCH_SIZE,
+        shuffle=False
+    )
+
+    for data in train_loader:
+        print(data.noisy_0.shape)
+        break
+
+    model = ExpValCircuitGraphModel(
+        num_node_features=22,
+        hidden_channels=15
+    )
+    criterion = torch.nn.MSELoss()
+
+    optimizer = Adam(model.parameters(), lr=0.001)
+    scheduler = ReduceLROnPlateau(optimizer,
+                                  'min',
+                                  factor=0.1,
+                                  patience=15,
+                                  verbose=True,
+                                  min_lr=0.00001)
+
+    min_valid_loss = np.inf
+
+    train_losses = []
+    val_losses = []
+
+    N_EPOCHS = 100
+
+    progress = tqdm_notebook(range(N_EPOCHS), desc='Model training', leave=True)
+    for epoch in progress:
+        train_loss = 0.0
+        model.train()
+        for i, data in enumerate(train_loader):
+            optimizer.zero_grad()
+
+            out = model(
+                data.noisy_0,
+                data.observable,
+                data.circuit_depth,
+                data.x,
+                data.edge_index,
+                data.batch
+            )
+            loss = criterion(out, torch.squeeze(data.y, 1))
+
+            train_loss += loss.item()
+
+            loss.backward()
+            optimizer.step()
+
+        valid_loss = 0.0
+        model.eval()
+        for i, data in enumerate(val_loader):
+            out = model(
+                data.noisy_0,
+                data.observable,
+                data.circuit_depth,
+                data.x,
+                data.edge_index,
+                data.batch)
+            loss = criterion(out, torch.squeeze(data.y, 1))
+
+            valid_loss += loss.item()
+
+        scheduler.step(valid_loss)
+
+        if epoch >= 1:
+            train_losses.append(train_loss / len(train_loader))
+            val_losses.append(valid_loss / len(val_loader))
+
+            progress.set_description(f"{round(train_losses[-1], 5)}, {round(val_losses[-1], 5)}")
+            progress.refresh()
