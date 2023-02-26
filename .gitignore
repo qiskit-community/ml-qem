@@ -136,3 +136,5 @@ docs/tutorials/data/haoran_mbd/random_circuits/obselete
 docs/tutorials/model/obselete
 
 .DS_Store
+docs/tutorials/data/tiling/train/step6_q0-q7_*
+docs/tutorials/data/tiling/val/step6_q0-q7_*
