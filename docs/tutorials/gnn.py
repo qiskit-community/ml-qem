@@ -123,7 +123,7 @@ class ExpValCircuitGraphModel(torch.nn.Module):
 
 if __name__ == "__main__":
     train_paths = [
-        './data/tiling/step6_q0-q3_total8.json',
+        './data/tiling/step6_q0-q3_total8_seed0.json',
     ]
 
     val_paths = [
