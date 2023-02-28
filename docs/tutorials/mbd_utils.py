@@ -352,7 +352,7 @@ def cal_all_z_exp(counts):
     return all_z_exp
 
 
-def construct_mbl_circuit(num_qubit, disorder, theta, steps):
+def construct_mbl_circuit(num_qubit, disorder, theta, steps, broken_connections = None):
     """Construct the circuit for Floquet dynamics of an MBL circuit.
 
     Args:
@@ -360,6 +360,7 @@ def construct_mbl_circuit(num_qubit, disorder, theta, steps):
         W (float): Disorder strength up to np.pi.
         theta (float): Interaction strength up to np.pi.
         steps (int): Number of steps.
+        broken_connections (list[tuple]): Qubit pairs that are should not interact in the MBL circuit written as (i, j) where i < j
     """
     qc = QuantumCircuit(num_qubit)
 
@@ -373,14 +374,16 @@ def construct_mbl_circuit(num_qubit, disorder, theta, steps):
     for step in range(steps):
         # Interactions between even layers
         for even_qubit in range(0, num_qubit, 2):
-            qc.append(CZGate(), (even_qubit, even_qubit + 1))
-            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
-            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
+            if (even_qubit, even_qubit+1) not in broken_connections:
+                qc.append(CZGate(), (even_qubit, even_qubit + 1))
+                qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
+                qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
         # Interactions between odd layers
         for odd_qubit in range(1, num_qubit - 1, 2):
-            qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
-            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
-            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
+            if (odd_qubit, odd_qubit + 1) not in broken_connections:
+                qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
+                qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
+                qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
         # Apply RZ disorder
         for q in range(num_qubit):
             qc.append(PhaseGate(disorder[q]), [q])
