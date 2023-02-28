@@ -180,7 +180,7 @@ def force_nonzero_expectation_from_clifford_circuit(clifford_circuit, print_bool
             stabilizer = stab
             break
         # If we have tried every stabilizer, throw an exception
-        if idx >= len(stabilizers)-1:
+        if idx >= len(stabilizers) - 1:
             raise UserWarning("All of the stabilizers have the identity matrix I!")
     if print_bool:
         print(f'Stabilizer: {stabilizer}')
@@ -191,9 +191,9 @@ def force_nonzero_expectation_from_clifford_circuit(clifford_circuit, print_bool
 
     # Change the measurement basis of each qubit
     for qubit in range(0, qc_forced.num_qubits):
-        op = stabilizer[qc_forced.num_qubits-qubit]
+        op = stabilizer[qc_forced.num_qubits - qubit]
         if op == 'X':
-            qc_forced.append(HGate(), [[qubit]]) # Convert to x-basis measurement
+            qc_forced.append(HGate(), [[qubit]])  # Convert to x-basis measurement
         elif op == 'Y':
             qc_forced.append(SdgGate(), [[qubit]])
             qc_forced.append(HGate(), [[qubit]])
@@ -323,7 +323,7 @@ def calc_imbalance(single_z_dataset, even_qubits, odd_qubits):
             elif qubit in odd_qubits:
                 ib -= single_z_dataset[step][qubit]
             else:
-                print(f'Warning: The index {i} was not in even_qubits or odd_qubits')
+                print(f'Warning: The index {ib} was not in even_qubits or odd_qubits')
         imbalance[step] = ib / num_qubit
     return imbalance
 
@@ -352,7 +352,7 @@ def cal_all_z_exp(counts):
     return all_z_exp
 
 
-def construct_mbl_circuit(num_qubit, disorder, theta, steps, broken_connections = None):
+def construct_mbl_circuit(num_qubit, disorder, theta, steps):
     """Construct the circuit for Floquet dynamics of an MBL circuit.
 
     Args:
@@ -374,16 +374,14 @@ def construct_mbl_circuit(num_qubit, disorder, theta, steps, broken_connections 
     for step in range(steps):
         # Interactions between even layers
         for even_qubit in range(0, num_qubit, 2):
-            if (even_qubit, even_qubit+1) not in broken_connections:
-                qc.append(CZGate(), (even_qubit, even_qubit + 1))
-                qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
-                qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
+            qc.append(CZGate(), (even_qubit, even_qubit + 1))
+            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
+            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
         # Interactions between odd layers
         for odd_qubit in range(1, num_qubit - 1, 2):
-            if (odd_qubit, odd_qubit + 1) not in broken_connections:
-                qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
-                qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
-                qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
+            qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
+            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
+            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
         # Apply RZ disorder
         for q in range(num_qubit):
             qc.append(PhaseGate(disorder[q]), [q])
@@ -407,3 +405,56 @@ def generate_disorder(n_qubits, disorder_strength=np.pi, seed=0):
     np.random.seed(seed)
     disorder = [np.random.uniform(-1 * disorder_strength, disorder_strength) for _ in range(n_qubits)]
     return disorder
+
+
+def construct_mbl_circ_with_cut(num_qubit, disorder, theta, steps, broken_connections=[]):
+    """Construct the circuit for Floquet dynamics of an MBL circuit.
+
+    Args:
+        num_spins (int): Number of spins. Must be even.
+        W (float): Disorder strength up to np.pi.
+        theta (float): Interaction strength up to np.pi.
+        steps (int): Number of steps.
+        broken_connections (list[tuple]): Qubit pairs that are should not interact in the MBL circuit written as (i, j) where i < j
+    """
+    qc = QuantumCircuit(num_qubit)
+
+    # Hard domain wall initial state
+    # Qubits 0 to num_qubit/2 - 1 are up, and qubits num_qubit/2 to num_qubit - 1 are down
+    for qubit_idx in range(num_qubit):
+        if qubit_idx % 2 == 1:
+            qc.x(qubit_idx)
+
+    ## Floquet evolution
+    for step in range(steps):
+        # Interactions between even layers
+        for even_qubit in range(0, num_qubit, 2):
+            if (even_qubit, even_qubit + 1) not in broken_connections:
+                qc.append(CZGate(), (even_qubit, even_qubit + 1))
+            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
+            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
+        # Interactions between odd layers
+        for odd_qubit in range(1, num_qubit - 1, 2):
+            if (odd_qubit, odd_qubit + 1) not in broken_connections:
+                qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
+            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
+            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
+        # Apply RZ disorder
+        for q in range(num_qubit):
+            qc.append(PhaseGate(disorder[q]), [q])
+
+    # Measure Z^{\otimes num_qubit}, or the all-Z operator from which all Z, ZZ, ... operators can be computed
+    qc.measure_all()
+
+    return qc
+
+
+if __name__ == '__main__':
+    num_qubits = 8
+    disorders = generate_disorder(num_qubits)
+    theta = 0.05 * np.pi  # Interaction strength up to np.pi
+    steps = 2
+    qc = construct_mbl_circuit(num_qubits, disorders, theta, steps)
+    print(qc.draw(fold=-1, idle_wires=False))
+    qc = construct_mbl_circuit(num_qubits, disorders, theta, steps, [(1, 2), (6, 7)])
+    print(qc.draw(fold=-1, idle_wires=False))
