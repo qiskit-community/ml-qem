@@ -315,17 +315,23 @@ def calc_imbalance(single_z_dataset, even_qubits, odd_qubits):
     num_qubit = len(even_qubits) + len(odd_qubits)
     num_steps = len(single_z_dataset)
     imbalance = np.zeros(num_steps)
-    for step in range(num_steps):
-        ib = 0
-        for qubit in range(num_qubit):
-            if qubit in even_qubits:
-                ib += single_z_dataset[step][qubit]
-            elif qubit in odd_qubits:
-                ib -= single_z_dataset[step][qubit]
-            else:
-                print(f'Warning: The index {ib} was not in even_qubits or odd_qubits')
-        imbalance[step] = ib / num_qubit
-    return imbalance
+
+    # for step in range(num_steps):
+    #     ib = 0
+    #     for qubit in range(num_qubit):
+    #         if qubit in even_qubits:
+    #             ib += single_z_dataset[step][qubit]
+    #         elif qubit in odd_qubits:
+    #             ib -= single_z_dataset[step][qubit]
+    #         else:
+    #             print(f'Warning: The index {ib} was not in even_qubits or odd_qubits')
+    #     imbalance[step] = ib / num_qubit
+    # return imbalance
+
+    density = (1 - np.array(single_z_dataset)) / 2
+    N_odd = np.sum(density[:, np.array(odd_qubits, dtype=np.int)], 1)
+    N_even = np.sum(density[:, np.array(even_qubits, dtype=np.int)], 1)
+    return (N_odd - N_even) / (N_even + N_odd)
 
 
 def cal_all_z_exp(counts):
@@ -352,7 +358,7 @@ def cal_all_z_exp(counts):
     return all_z_exp
 
 
-def construct_mbl_circuit(num_qubit, disorder, theta, steps):
+def construct_mbl_circuit(num_qubit, disorder, theta, steps, completely_random=False):
     """Construct the circuit for Floquet dynamics of an MBL circuit.
 
     Args:
@@ -371,26 +377,44 @@ def construct_mbl_circuit(num_qubit, disorder, theta, steps):
             qc.x(qubit_idx)
 
     ## Floquet evolution
-    for step in range(steps):
-        # Interactions between even layers
-        for even_qubit in range(0, num_qubit, 2):
-            qc.append(CZGate(), (even_qubit, even_qubit + 1))
-            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
-            qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
-        # Interactions between odd layers
-        for odd_qubit in range(1, num_qubit - 1, 2):
-            qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
-            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
-            qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
-        # Apply RZ disorder
-        for q in range(num_qubit):
-            qc.append(PhaseGate(disorder[q]), [q])
+    if not completely_random:
+        for step in range(steps):
+            # Interactions between even layers
+            for even_qubit in range(0, num_qubit, 2):
+                qc.append(CZGate(), (even_qubit, even_qubit + 1))
+                qc.append(U3Gate(theta, 0, -np.pi), [even_qubit])
+                qc.append(U3Gate(theta, 0, -np.pi), [even_qubit + 1])
+            # Interactions between odd layers
+            for odd_qubit in range(1, num_qubit - 1, 2):
+                qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
+                qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit])
+                qc.append(U3Gate(theta, 0, -np.pi), [odd_qubit + 1])
+            # Apply RZ disorder
+            for q in range(num_qubit):
+                qc.append(PhaseGate(disorder[q]), [q])
+    else:
+        for step in range(steps):
+            # Interactions between even layers
+            for even_qubit in range(0, num_qubit, 2):
+                qc.append(CZGate(), (even_qubit, even_qubit + 1))
+                qc.append(U3Gate(*gen_random_param(3)), [even_qubit])
+                qc.append(U3Gate(*gen_random_param(3)), [even_qubit + 1])
+            # Interactions between odd layers
+            for odd_qubit in range(1, num_qubit - 1, 2):
+                qc.append(CZGate(), (odd_qubit, odd_qubit + 1))
+                qc.append(U3Gate(*gen_random_param(3)), [odd_qubit])
+                qc.append(U3Gate(*gen_random_param(3)), [odd_qubit + 1])
+            for q in range(num_qubit):
+                qc.append(PhaseGate(*gen_random_param(1)), [q])
 
     # Measure Z^{\otimes num_qubit}, or the all-Z operator from which all Z, ZZ, ... operators can be computed
     qc.measure_all()
 
     return qc
 
+
+def gen_random_param(size):
+    return 8 * np.pi * np.random.random(size) - 4 * np.pi
 
 def generate_disorder(n_qubits, disorder_strength=np.pi, seed=0):
     """Generate disorder
@@ -450,11 +474,16 @@ def construct_mbl_circ_with_cut(num_qubit, disorder, theta, steps, broken_connec
 
 
 if __name__ == '__main__':
-    num_qubits = 8
-    disorders = generate_disorder(num_qubits)
-    theta = 0.05 * np.pi  # Interaction strength up to np.pi
-    steps = 2
-    qc = construct_mbl_circuit(num_qubits, disorders, theta, steps)
-    print(qc.draw(fold=-1, idle_wires=False))
-    qc = construct_mbl_circuit(num_qubits, disorders, theta, steps, [(1, 2), (6, 7)])
-    print(qc.draw(fold=-1, idle_wires=False))
+    # num_qubits = 8
+    # disorders = generate_disorder(num_qubits)
+    # theta = 0.05 * np.pi  # Interaction strength up to np.pi
+    # steps = 2
+    # qc = construct_mbl_circuit(num_qubits, disorders, theta, steps)
+    # print(qc.draw(fold=-1, idle_wires=False))
+    # qc = construct_mbl_circuit(num_qubits, disorders, theta, steps, [(1, 2), (6, 7)])
+    # print(qc.draw(fold=-1, idle_wires=False))
+
+    num_steps = 0
+    num_qubit = 8
+    rb = construct_mbl_circuit(num_qubit, [], 0, num_steps, completely_random=True)
+    print(rb.draw(fold=-1, idle_wires=False))
