@@ -329,8 +329,8 @@ def calc_imbalance(single_z_dataset, even_qubits, odd_qubits):
     # return imbalance
 
     density = (1 - np.array(single_z_dataset)) / 2
-    N_odd = np.sum(density[:, np.array(odd_qubits, dtype=np.int)], 1)
-    N_even = np.sum(density[:, np.array(even_qubits, dtype=np.int)], 1)
+    N_odd = np.sum(density[:, np.array(odd_qubits, dtype=int)], 1)
+    N_even = np.sum(density[:, np.array(even_qubits, dtype=int)], 1)
     return (N_odd - N_even) / (N_even + N_odd)
 
 
