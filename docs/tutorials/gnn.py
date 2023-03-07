@@ -70,7 +70,8 @@ class ExpValCircuitGraphModel(torch.nn.Module):
             self,
             num_node_features: int,
             hidden_channels: int,
-            exp_value_size: int = 4
+            exp_value_size: int = 4,
+            dropout: float = 0.2
     ):
         super().__init__()
 
@@ -90,7 +91,7 @@ class ExpValCircuitGraphModel(torch.nn.Module):
 
         self.body_seq = torch.nn.Sequential(
             Linear(hidden_channels * 2 + 1 + exp_value_size, hidden_channels),
-            torch.nn.Dropout(0.2),
+            torch.nn.Dropout(dropout),
             Linear(hidden_channels, exp_value_size)
         )
 
@@ -123,11 +124,11 @@ class ExpValCircuitGraphModel(torch.nn.Module):
 
 if __name__ == "__main__":
     train_paths = [
-        './data/tiling/step6_q0-q3_total8_seed0.json',
+        './data/circ_parsed_pyg_data/all_z_exp/train/fakelima_depth1.json',
     ]
 
     val_paths = [
-        f'./data/mbd_datasets/val/step_{i}.json' for i in range(10)
+        './data/circ_parsed_pyg_data/all_z_exp/val/fakelima/fakelima_depth1.json'
     ]
 
     BATCH_SIZE = 32
@@ -154,7 +155,8 @@ if __name__ == "__main__":
 
     model = ExpValCircuitGraphModel(
         num_node_features=22,
-        hidden_channels=15
+        hidden_channels=15,
+        exp_value_size=1,
     )
     criterion = torch.nn.MSELoss()
 
