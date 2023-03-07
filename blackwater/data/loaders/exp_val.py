@@ -17,6 +17,7 @@ class CircuitGraphExpValMitigationDataset(Dataset):
         self,
         path: Union[str, List[str]],
         transforms: Optional[List[BaseTransform]] = None,
+        num_samples: int = None,
     ):
         """Dataset that contains graphs that preserve information
         about circuits and backends those circuits were executed on (gate errors, t1, t2, etc)
@@ -40,6 +41,8 @@ class CircuitGraphExpValMitigationDataset(Dataset):
                 path_to_file, "r"
             ) as entries_file:
                 json_data: List[Dict[str, Any]] = json.load(entries_file)
+                if num_samples != None:
+                    json_data = json_data[:num_samples]
 
             for entry in json_data:
                 try:
