@@ -489,3 +489,17 @@ def generate_random_pauli_sum_op(
     ):
         paulis.append((str(pauli), coefficient))
     return PauliSumOp.from_list(paulis)
+
+
+
+if __name__ == '__main__':
+    qc = QuantumCircuit(2)
+    qc.x(1)
+    qc.x(0)
+    qc.barrier()
+    qc.rz(0.4, [0, 1])
+    qc.measure_all()
+
+    from qiskit.providers.fake_provider import FakeLima
+    backend = FakeLima()
+    circuit_to_graph_data_json(qc, get_backend_properties_v1(backend))
