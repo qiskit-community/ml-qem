@@ -416,7 +416,8 @@ def construct_mbl_circuit(num_qubit, disorder, theta, steps, completely_random=F
 def gen_random_param(size):
     return 8 * np.pi * np.random.random(size) - 4 * np.pi
 
-def generate_disorder(n_qubits, disorder_strength=np.pi, seed=0):
+
+def generate_disorder(n_qubits, disorder_strength=np.pi, seed=None):
     """Generate disorder
 
     Args:
@@ -426,7 +427,7 @@ def generate_disorder(n_qubits, disorder_strength=np.pi, seed=0):
     Returns:
         List[float]: List of angles in single-qubit phase gates that correspond to disorders
     """
-    np.random.seed(seed)
+    if seed is not None: np.random.seed(seed)
     disorder = [np.random.uniform(-1 * disorder_strength, disorder_strength) for _ in range(n_qubits)]
     return disorder
 
