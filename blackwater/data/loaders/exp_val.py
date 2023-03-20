@@ -41,10 +41,15 @@ class CircuitGraphExpValMitigationDataset(Dataset):
                 path_to_file, "r"
             ) as entries_file:
                 json_data: List[Dict[str, Any]] = json.load(entries_file)
-                if num_samples != None:
+                if num_samples is not None:
                     json_data = json_data[:num_samples]
 
             for entry in json_data:
+                try:
+                    entry.pop('circuit')
+                except KeyError:
+                    pass
+
                 try:
                     data = ExpValueEntry.from_json(entry).to_pyg_data()
 
