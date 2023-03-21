@@ -51,6 +51,11 @@ class CircuitGraphExpValMitigationDataset(Dataset):
                     pass
 
                 try:
+                    entry.pop('metadata')
+                except KeyError:
+                    pass
+
+                try:
                     data = ExpValueEntry.from_json(entry).to_pyg_data()
 
                     for transform in transforms:
