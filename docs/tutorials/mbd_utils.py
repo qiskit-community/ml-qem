@@ -88,6 +88,28 @@ from qiskit.circuit.library.standard_gates import (
 from qiskit.circuit.exceptions import CircuitError
 
 
+def coherent_noise_backend(
+        theta: float = 0,
+        Simulator=QasmSimulator
+):
+    """
+    Add a noise channel with over-rotation on the CNOT gate on the target by theta to the backend
+    """
+    cnot = Operator(CXGate())
+    up_state = 0.5 * (Operator(IGate()) + Operator(ZGate()))
+    down_state = 0.5 * (Operator(IGate()) - Operator(ZGate()))
+    over_rotated_cnot = Operator(IGate()).tensor(up_state) + 1.0j * Operator(RXGate(np.pi + theta)).tensor(down_state)
+    err_unitary = over_rotated_cnot @ cnot
+    err_coherent = coherent_unitary_error(err_unitary)
+
+    # Create a noise model from the error channels
+    noisemodel = NoiseModel()
+    noisemodel.add_all_qubit_quantum_error(err_coherent, ['cx'])
+    backend = Simulator(noise_model=noisemodel)
+
+    return backend
+
+
 def random_clifford_circuit(num_qubits, depth, max_operands=2, reset=False, seed=None):
     """Generate random circuit of arbitrary size and form.
 
