@@ -51,7 +51,7 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
         angles = []
         for instr, qargs, cargs in circuit.data:
             if instr.name in ['rx', 'ry', 'rz'] and len(qargs) == 1:
-                angles += [instr.params[0]]
+                angles += [float(instr.params[0])]
         bin_edges = np.arange(-2 * np.pi, 2 * np.pi + bin_size, bin_size)
         counts, _ = np.histogram(angles, bins=bin_edges)
         bin_labels = [f"{left:.2f} to {right:.2f}" for left, right in zip(bin_edges[:-1], bin_edges[1:])]

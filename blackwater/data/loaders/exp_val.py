@@ -1,5 +1,5 @@
 """ExpVal dataset."""
-import json
+import json, pickle
 from typing import Union, List, Optional, Dict, Any
 
 from torch_geometric import transforms as pyg_transforms
@@ -36,15 +36,25 @@ class CircuitGraphExpValMitigationDataset(Dataset):
 
         self.entries = []
 
-        for path_to_file in paths:
-            with open(  # pylint: disable=unspecified-encoding
-                path_to_file, "r"
-            ) as entries_file:
-                json_data: List[Dict[str, Any]] = json.load(entries_file)
-                if num_samples is not None:
-                    json_data = json_data[:num_samples]
 
-            for entry in json_data:
+        for path_to_file in paths:
+            if path_to_file.endswith('.json'):
+                with open(  # pylint: disable=unspecified-encoding
+                    path_to_file, "r"
+                ) as entries_file:
+                    data: List[Dict[str, Any]] = json.load(entries_file)
+                    if num_samples is not None:
+                        data = data[:num_samples]
+
+            elif path_to_file.endswith('.pk'):
+                with open(  # pylint: disable=unspecified-encoding
+                    path_to_file, "rb"
+                ) as entries_file:
+                    data: List[Dict[str, Any]] = pickle.load(entries_file)
+                    if num_samples is not None:
+                        data = data[:num_samples]
+
+            for entry in data:
                 try:
                     entry.pop('circuit')
                 except KeyError:
