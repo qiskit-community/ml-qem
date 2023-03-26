@@ -100,15 +100,23 @@ def load_test_sets_d123():
 PATH_TO_FOLDER = '/Users/haoranliao/GitHub/blackwater/docs/tutorials'
 
 data_info = {
-    "d1": {DATA_FILEPATH: PATH_TO_FOLDER + '/data/haoran_mbd/random_cliffords', LOAD_FUNCTION: load_circuits_d1_d2,
-           "name": "random_cliffords",
-           MODEL_FILEPATH: PATH_TO_FOLDER + "/model/haoran_mbd2/mlp_random_cliffords.pth"},
-    "d2": {DATA_FILEPATH: PATH_TO_FOLDER + '/data/haoran_mbd/random_brickwork', LOAD_FUNCTION: load_circuits_d1_d2,
-           "name": "random_brickwork",
-           MODEL_FILEPATH: PATH_TO_FOLDER + "/model/haoran_mbd2/mlp_random_brickwork.pth"},
-    "d3": {DATA_FILEPATH: PATH_TO_FOLDER + '/data/mbd_datasets2/theta_0.05pi/circuits.pk',
-           LOAD_FUNCTION: load_circuits_d3, "name": 'mbd',
-           MODEL_FILEPATH: PATH_TO_FOLDER + "/model/haoran_mbd2/mlp_mbd.pth"},
+    "d1": {
+        DATA_FILEPATH: PATH_TO_FOLDER + '/data/haoran_mbd/random_cliffords',
+        LOAD_FUNCTION: load_circuits_d1_d2,
+        "name": "random_cliffords",
+        MODEL_FILEPATH: PATH_TO_FOLDER + "/model/haoran_mbd2/mlp_random_cliffords.pth"
+    },
+    "d2": {
+        DATA_FILEPATH: PATH_TO_FOLDER + '/data/haoran_mbd/random_brickwork',
+        LOAD_FUNCTION: load_circuits_d1_d2,
+        "name": "random_brickwork",
+        MODEL_FILEPATH: PATH_TO_FOLDER + "/model/haoran_mbd2/mlp_random_brickwork.pth"
+    },
+    "d3": {
+        DATA_FILEPATH: PATH_TO_FOLDER + '/data/mbd_datasets2/theta_0.05pi/circuits.pk',
+        LOAD_FUNCTION: load_circuits_d3, "name": 'mbd',
+        MODEL_FILEPATH: PATH_TO_FOLDER + "/model/haoran_mbd2/mlp_mbd.pth"
+    },
 }
 
 
@@ -129,7 +137,7 @@ def train_model_d123(data_name):
     X_train, y_train = encode_data(train_circuits, properties, train_ideal_exp_vals, train_noisy_exp_vals, num_qubits=4)
 
     train_dataset = TensorDataset(torch.Tensor(X_train), torch.Tensor(y_train))
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_test_sets_d123()
     test_loader = load_test_loader_d123(test_circuits, test_ideal_exp_vals, test_noisy_exp_vals)
 
@@ -293,16 +301,15 @@ def failure_121():
 
 def tst_failure11():
     for data_name, extra in [("d1", "continuous1")]:
-        np.random.seed(0)
-        torch.random.manual_seed(0)
+        # np.random.seed(0)
+        # torch.random.manual_seed(0)
         run_and_save_model(data_name, extra)
 
-    np.random.seed(0)
-    torch.random.manual_seed(0)
+    # np.random.seed(0)
+    # torch.random.manual_seed(0)
     d1_info = data_info["d1"]
     loaded_model = load_model(d1_info[MODEL_FILEPATH])
     make_plot(loaded_model, name=f"d1 second continuous model")
-
 
 
 
