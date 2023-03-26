@@ -32,12 +32,7 @@ from mbd_utils import cal_z_exp, generate_disorder, construct_mbl_circuit, calc_
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-
-TRAIN = True
-DATA = 'random_cliffords'
-SAVE = True
-LOAD = not SAVE
+import random
 
 BATCH_SIZE = 32
 
@@ -55,6 +50,29 @@ h10_test_data_path = './data/mbd_datasets2/theta_0.05pi/circuits.pk'
 DATA_FILEPATH = "data_filepath"
 MODEL_FILEPATH = "model_filepath"
 LOAD_FUNCTION = "load_function"
+
+
+def fix_random_seed(seed=0):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    print(f'random seed fixed to {seed}')
+
+
+def custom_loader(X, y, batch_size=BATCH_SIZE):
+    assert len(X) == len(y)
+    num_batches = int(np.ceil(len(X) / batch_size))
+    indices = np.arange(len(X))
+    np.random.shuffle(indices)
+    X = X[indices]
+    y = y[indices]
+    for i in range(num_batches):
+        yield X[i*batch_size:(i+1)*batch_size], y[i*batch_size:(i+1)*batch_size]
 
 
 def load_circuits_d1_d2(data_dir, f_ext='.pk'):
@@ -114,7 +132,8 @@ data_info = {
     },
     "d3": {
         DATA_FILEPATH: PATH_TO_FOLDER + '/data/mbd_datasets2/theta_0.05pi/circuits.pk',
-        LOAD_FUNCTION: load_circuits_d3, "name": 'mbd',
+        LOAD_FUNCTION: load_circuits_d3,
+        "name": 'mbd',
         MODEL_FILEPATH: PATH_TO_FOLDER + "/model/haoran_mbd2/mlp_mbd.pth"
     },
 }
@@ -124,7 +143,8 @@ def load_test_loader_d123(test_circuits, test_ideal_exp_vals, test_noisy_exp_val
     test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
     X_test, y_test = encode_data(test_circuits, properties, test_ideal_exp_vals, test_noisy_exp_vals, num_qubits=4)
     test_dataset = TensorDataset(torch.Tensor(X_test), torch.Tensor(y_test))
-    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, worker_init_fn=np.random.seed(0))
+    # test_loader = custom_loader(X_test, y_test)
     return test_loader
 
 
@@ -137,7 +157,7 @@ def train_model_d123(data_name):
     X_train, y_train = encode_data(train_circuits, properties, train_ideal_exp_vals, train_noisy_exp_vals, num_qubits=4)
 
     train_dataset = TensorDataset(torch.Tensor(X_train), torch.Tensor(y_train))
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, worker_init_fn=np.random.seed(0))
     test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_test_sets_d123()
     test_loader = load_test_loader_d123(test_circuits, test_ideal_exp_vals, test_noisy_exp_vals)
 
@@ -207,6 +227,7 @@ def plot_trained_model(train_losses, test_losses):
 
 
 def save_model(model, model_path):
+    print('saved:', model_path)
     torch.save(model.state_dict(), model_path)
 
 
@@ -216,8 +237,8 @@ def load_model(model_path):
         output_size=4,
         hidden_size=128
     )
-    print('loaded, ', model_path)
-    model.load_state_dict(torch.load(model_path))
+    print('loaded:', model_path)
+    model.load_state_dict(torch.load(model_path), strict=True)
     return model
 
 
@@ -274,6 +295,8 @@ def make_plot(model, name="default"):
 
     sns.histplot(data=df["imb_diff"], kde=True, bins=40)
     plt.title(f"{name}: Dist to ideal exp value")
+    plt.ylim([0, 600])
+    plt.xlim([-0.2, 0.2])
     plt.show()
 
 
@@ -282,58 +305,308 @@ def run_and_save_model(data_name, extra=""):
     train_losses, test_losses, model = train_model_d123(data_name)
     plot_trained_model(train_losses, test_losses)
     save_model(model, model_path=dinfo[MODEL_FILEPATH])
-    loaded_model = load_model(dinfo[MODEL_FILEPATH])
     make_plot(model, name=f"{data_name}_{extra}_trained model")
-    make_plot(loaded_model, name=f"{data_name}_{extra}_loaded model")
 
 
-def failure_121():
-    for data_name, extra in [("d1", "discretefirst"), ("d2", 'discrete')]:
-        # np.random.seed(0)
-        # torch.random.manual_seed(0)
-        run_and_save_model(data_name, extra)
-    # np.random.seed(0)
-    # torch.random.manual_seed(0)
-    d1_info = data_info["d1"]
-    loaded_model = load_model(d1_info[MODEL_FILEPATH])
-    make_plot(loaded_model, name=f"d1_discrete_second_loaded model")
+max_steps = 0
+def run_floquet_steps(models):
+    from collections import defaultdict
+    num_disorders = 10
+    num_spins = 4
+    W = 0.8 * np.pi
+    theta = 0.05 * np.pi
+    even_qubits = np.linspace(0, num_spins, int(num_spins / 2), endpoint=False)
+    odd_qubits = np.linspace(1, num_spins + 1, int(num_spins / 2), endpoint=False)
+
+    imbalance_all_ideal = []
+    imbalance_all_noisy = []
+    imbalance_all_mitigated_dict = defaultdict(list)
+
+    exp_Z_all_ideal = []
+    exp_Z_all_noisy = []
+    exp_Z_all_mitigated_dict = defaultdict(list)
+
+    for disorder_realization in tqdm(range(num_disorders)):
+        disorders = generate_disorder(num_spins, W, seed=disorder_realization)
+
+        qc_list = []
+        for steps in range(max_steps + 10):
+            qc_list.append(construct_mbl_circuit(num_spins, disorders, theta, steps))
+
+        transpiled_qc_list = transpile(qc_list, backend_noisy, optimization_level=3)
+        job_ideal = execute(qc_list, **run_config_ideal)
+        job_noisy = execute(transpiled_qc_list, **run_config_noisy)
+
+        exp_Z_ideal = []
+        exp_Z_noisy = []
+        exp_Z_mitigated_dict = defaultdict(list)
+
+        for i in range(len(qc_list)):
+            counts_ideal = job_ideal.result().get_counts()[i]
+            counts_noisy = job_noisy.result().get_counts()[i]
+
+            ideal_exp_val = cal_z_exp(counts_ideal)
+            noisy_exp_val = cal_z_exp(counts_noisy)
+
+            exp_Z_ideal.append(list(ideal_exp_val))  # Single-Z expectation value of each qubit
+            exp_Z_noisy.append(list(noisy_exp_val))  # Single-Z expectation value of each qubit
+
+            X, _ = encode_data([transpiled_qc_list[i]], properties, ideal_exp_val, [noisy_exp_val], num_qubits=4)
+
+            for j, model in enumerate(models):
+                mitigated_exp_val = model(X).tolist()[0]
+                exp_Z_mitigated_dict[j].append(mitigated_exp_val)
+
+        imbalance_ideal = calc_imbalance(exp_Z_ideal, even_qubits, odd_qubits)
+        imbalance_noisy = calc_imbalance(exp_Z_noisy, even_qubits, odd_qubits)
+        imbalance_mitigated_dict = defaultdict(list)
+        for k, exp_Z_mitigated in exp_Z_mitigated_dict.items():
+            imbalance_mitigated_dict[k] = calc_imbalance(exp_Z_mitigated, even_qubits, odd_qubits)
+
+        imbalance_all_ideal.append(imbalance_ideal)
+        imbalance_all_noisy.append(imbalance_noisy)
+        for k, imbalance_mitigated in imbalance_mitigated_dict.items():
+            imbalance_all_mitigated_dict[k].append(imbalance_mitigated)
+
+        exp_Z_all_ideal.append(exp_Z_ideal)
+        exp_Z_all_noisy.append(exp_Z_noisy)
+        for k, exp_Z_mitigated in exp_Z_mitigated_dict.items():
+            exp_Z_all_mitigated_dict[k].append(exp_Z_mitigated)
+
+    # Average imbalance
+    imbalance_ideal_average = np.mean(imbalance_all_ideal, axis=0)
+    imbalance_noisy_average = np.mean(imbalance_all_noisy, axis=0)
+    imbalance_mitigated_average_dict = defaultdict()
+    for ind, imbalance_all_mitigated in imbalance_all_mitigated_dict.items():
+        imbalance_mitigated_average_dict[ind] = np.mean(imbalance_all_mitigated, axis=0)
+
+    return imbalance_ideal_average, imbalance_noisy_average, imbalance_mitigated_average_dict
 
 
-def tst_failure11():
-    for data_name, extra in [("d1", "continuous1")]:
-        # np.random.seed(0)
-        # torch.random.manual_seed(0)
-        run_and_save_model(data_name, extra)
+def plot_floquet_steps(imbalance_ideal_average, imbalance_noisy_average, imbalance_mitigated_average_dict):
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    ax2 = ax1.twiny()
 
-    # np.random.seed(0)
-    # torch.random.manual_seed(0)
-    d1_info = data_info["d1"]
-    loaded_model = load_model(d1_info[MODEL_FILEPATH])
-    make_plot(loaded_model, name=f"d1 second continuous model")
+    ax1.plot(imbalance_ideal_average, color='blue', label="ideal")
+    ax1.plot(imbalance_noisy_average, color='red', label="noisy")
+    for i, imbalance_mitigated_average in imbalance_mitigated_average_dict.items():
+        ax1.plot(imbalance_mitigated_average, color='green', label=f"MLP {i}", linestyle='solid')
 
+    ax1.axvline(x=9, color='gray', label='training data availability')
+
+    ax1.set_xlabel('Floquet steps')
+    ax1.set_ylabel('Imbalance')
+    ax1.legend()
+
+    xmin, xmax = ax1.get_xlim()
+    max_x = max_steps + 10
+    ax1.set_xlim([0, max_x - 1])
+    ax2.set_xlim([0, max_x - 1])
+    ax1.set_ylim([0.4, 1.08])
+    ax1.set_xticks(np.arange(0, max_x, 4))
+    x2 = np.linspace(xmin, xmax, 50)
+    ax2.plot(x2, -np.ones(50))  # Create a dummy plot
+    ax2.set_xticks(np.arange(0, max_x, 4))
+    ax2.set_xticklabels(2 * np.arange(0, max_x, 4))
+    ax2.set_xlabel(r"2q gate depth")
+    # ax1.grid(None)
+    ax2.grid(None)
+
+    plt.style.use({'figure.facecolor': 'white'})
+    plt.show()
+
+
+def success_111():
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"first_try")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try")
+
+
+def success_1211():
+    for data_name in ['d1', 'd2']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"first_try")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try")
+
+def success_12311():
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"first_try")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try")
+
+
+def success_123121():
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    for data_name in ['d1', 'd2']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"first_try_{data_name}")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+
+def success_1231231():
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"first_try_{data_name}")
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+def success_11i():
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"first_try_{data_name}")
+
+    model = MLP1(
+        input_size=58,
+        output_size=4,
+        hidden_size=128
+    )
+    model.load_state_dict(torch.load(data_info['d1'][MODEL_FILEPATH]))
+    make_plot(model, name=f"second_try_{data_name}")
+
+
+def success_1i1():
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+
+    model = MLP1(
+        input_size=58,
+        output_size=4,
+        hidden_size=128
+    )
+    model.load_state_dict(torch.load(data_info['d1'][MODEL_FILEPATH]))
+    make_plot(model, name=f"first_try_{data_name}")
+
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+
+def success_1l1():
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    load_models()
+    for data_name in ['d1']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+
+def success_123l123():
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+    load_models()
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+
+def success_tllp():
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+
+    for data_name in ['d1', 'd2', 'd3']:
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"first_try_{data_name}")
+
+    models = []
+    for data_name in ['d1', 'd2', 'd3']:
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        models.append(loaded_model)
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+    fix_random_seed(0)
+    plot_floquet_steps(*run_floquet_steps(models))
+
+
+def success_tlpl():
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+
+    models = []
+    for data_name in ['d1', 'd2', 'd3']:
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        models.append(loaded_model)
+        make_plot(loaded_model, name=f"first_try_{data_name}")
+
+    fix_random_seed(0)
+    plot_floquet_steps(*run_floquet_steps(models))
+
+    for data_name in ['d1', 'd2', 'd3']:
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+
+def success_tlpll():
+    for data_name in ['d1', 'd2', 'd3']:
+        fix_random_seed(0)
+        run_and_save_model(data_name, "")
+
+    models = []
+    for data_name in ['d1', 'd2', 'd3']:
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        models.append(loaded_model)
+
+    fix_random_seed(0)
+    plot_floquet_steps(*run_floquet_steps(models))
+
+    for data_name in ['d1', 'd2', 'd3']:
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"second_try_{data_name}")
+
+    for data_name in ['d1', 'd2', 'd3']:
+        loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+        make_plot(loaded_model, name=f"third_try_{data_name}")
 
 
 if __name__ == "__main__":
-    for data_name in ['d1', 'd2', 'd3']:
-        np.random.seed(0)
-        torch.random.manual_seed(0)
-        run_and_save_model(data_name)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    success_tlpl()
+    # for data_name in ['d1', 'd2', 'd3']:
+    #     loaded_model = load_model(data_info[data_name][MODEL_FILEPATH])
+    #     make_plot(loaded_model, name=f"second_try_{data_name}")
 

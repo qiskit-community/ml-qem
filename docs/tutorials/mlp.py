@@ -11,8 +11,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from qiskit import QuantumCircuit
 
-def count_gates_by_rotation_angle(circuit):
+
+def count_gates_by_rotation_angle(circuit, bin_size):
     angles = []
     for instr, qargs, cargs in circuit.data:
         if instr.name in ['rx', 'ry', 'rz'] and len(qargs) == 1:
@@ -34,17 +36,18 @@ def recursive_dict_loop(my_dict, parent_key=None, out=[], target_key1=None, targ
     return out
 
 
-def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits):
-    gates_set = properties['gates_set']
 
-    vec = [np.mean(recursive_dict_loop(properties, target_key1='cx', target_key2='gate_error'))]
-    vec += [np.mean(recursive_dict_loop(properties, target_key1='id', target_key2='gate_error'))]
-    vec += [np.mean(recursive_dict_loop(properties, target_key1='sx', target_key2='gate_error'))]
-    vec += [np.mean(recursive_dict_loop(properties, target_key1='x', target_key2='gate_error'))]
-    vec += [np.mean(recursive_dict_loop(properties, target_key1='rz', target_key2='gate_error'))]
-    vec += [np.mean(recursive_dict_loop(properties, target_key1='', target_key2='readout_error'))]
-    vec += [np.mean(recursive_dict_loop(properties, target_key1='', target_key2='t1'))]
-    vec += [np.mean(recursive_dict_loop(properties, target_key1='', target_key2='t2'))]
+def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits):
+    gates_set = sorted(properties['gates_set'])     # must sort!
+
+    vec = [np.mean(recursive_dict_loop(properties, out=[], target_key1='cx', target_key2='gate_error'))]
+    vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='id', target_key2='gate_error'))]
+    vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='sx', target_key2='gate_error'))]
+    vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='x', target_key2='gate_error'))]
+    vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='rz', target_key2='gate_error'))]
+    vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='readout_error'))]
+    vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t1'))]
+    vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t2'))]
     vec = torch.tensor(vec) * 100  # put it in the same order of magnitude as the expectation values
 
     bin_size = 0.1 * np.pi
@@ -55,13 +58,13 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
     X[:, :len(vec)] = vec[None, :]
 
     for i, circ in enumerate(circuits):
-        gate_counts = circ.count_ops()
+        gate_counts_all = circ.count_ops()
         X[i, len(vec):len(vec) + len(gates_set)] = torch.tensor(
-            [gate_counts.get(key, 0) for key in gates_set]
+            [gate_counts_all.get(key, 0) for key in gates_set]
         ) * 0.01  # put it in the same order of magnitude as the expectation values
 
     for i, circ in enumerate(circuits):
-        gate_counts = count_gates_by_rotation_angle(circ)
+        gate_counts = count_gates_by_rotation_angle(circ, bin_size)
         X[i, len(vec) + len(gates_set): -num_qubits] = torch.tensor(gate_counts) * 0.01  # put it in the same order of magnitude as the expectation values
 
         if num_qubits > 1: assert len(noisy_exp_vals[i]) == num_qubits
@@ -74,9 +77,43 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
     return X, y
 
 
+
+if __name__ == '__main__':
+    from qiskit.providers.fake_provider import FakeMontreal, FakeLima
+    from blackwater.data.utils import get_backend_properties_v1
+    backend = FakeLima()
+    props = backend.properties()
+    print(list({g.gate for g in props.gates}))
+    properties = get_backend_properties_v1(backend)
+
+    circuit_qasm = 'OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[5];\ncreg meas[4];\nrz(pi/2) q[1];\nsx q[1];\nrz(-pi/2) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(-pi/4) q[3];\nsx q[3];\nrz(-pi/2) q[3];\nx q[4];\ncx q[4],q[3];\nrz(1.3504439735577742) q[3];\nsx q[3];\nrz(-2.343957397662077) q[3];\nsx q[3];\nrz(-1.4156195211105356) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(pi/20) q[4];\nsx q[4];\nrz(2.0916100803511672) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(1.036297431763694) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-pi) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nsx q[3];\nrz(1.7278759594743862) q[3];\nsx q[3];\nrz(-4.349014256811735) q[3];\nsx q[4];\nrz(-1.4928778811476757) q[4];\nsx q[4];\nrz(-0.13653026392406042) q[4];\ncx q[3],q[4];\nsx q[3];\nrz(1.7278759594743862) q[3];\nsx q[3];\ncx q[1],q[3];\nsx q[1];\nrz(2.9845130209103035) q[1];\nsx q[1];\nrz(-0.16065255166893166) q[1];\nsx q[3];\nrz(1.7278759594743862) q[3];\nsx q[3];\nrz(-1.2074216032219418) q[3];\nsx q[4];\nrz(1.7278759594743862) q[4];\nsx q[4];\nrz(-2.091610080351167) q[4];\nbarrier q[2],q[1],q[3],q[4];\nmeasure q[2] -> meas[0];\nmeasure q[1] -> meas[1];\nmeasure q[3] -> meas[2];\nmeasure q[4] -> meas[3];\n'
+    circuits = [QuantumCircuit.from_qasm_str(circuit_qasm)]
+    ideal_exp_vals = [1, -1, 1, -1]
+    noisy_exp_vals = [[0.9, -0.9, 0.9, -0.9]]
+
+    for _ in range(2):
+        X, y, gate_counts_all = encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, 4)
+        print(X[0, 8:17])
+        print(gate_counts_all)
+
+
+    # print(properties)
+    # for _ in range(5):
+    #     vec = [np.mean(recursive_dict_loop(properties, out=[], target_key1='cx', target_key2='gate_error'))]
+    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='id', target_key2='gate_error'))]
+    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='sx', target_key2='gate_error'))]
+    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='x', target_key2='gate_error'))]
+    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='rz', target_key2='gate_error'))]
+    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='readout_error'))]
+    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t1'))]
+    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t2'))]
+    #     vec = torch.tensor(vec) * 100  # put it in the same order of magnitude as the expectation values
+    #     print(vec)
+
+
 class MLP1(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
-        super().__init__()
+        super(MLP1, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size, output_size)
@@ -90,7 +127,7 @@ class MLP1(nn.Module):
 
 class MLP2(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, dropout_rate=0.5):
-        super().__init__()
+        super(MLP2, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.bn1 = nn.BatchNorm1d(hidden_size)
         self.relu1 = nn.ReLU()
