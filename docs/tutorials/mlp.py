@@ -12,17 +12,30 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
+def count_gates_by_rotation_angle(circuit):
+    angles = []
+    for instr, qargs, cargs in circuit.data:
+        if instr.name in ['rx', 'ry', 'rz'] and len(qargs) == 1:
+            angles += [float(instr.params[0])]
+    bin_edges = np.arange(-2 * np.pi, 2 * np.pi + bin_size, bin_size)
+    counts, _ = np.histogram(angles, bins=bin_edges)
+    bin_labels = [f"{left:.2f} to {right:.2f}" for left, right in zip(bin_edges[:-1], bin_edges[1:])]
+    angle_bins = {label: count for label, count in zip(bin_labels, counts)}
+    return list(angle_bins.values())
+
+
+def recursive_dict_loop(my_dict, parent_key=None, out=[], target_key1=None, target_key2=None):
+    for key, val in my_dict.items():
+        if isinstance(val, dict):
+            recursive_dict_loop(val, key, out, target_key1, target_key2)
+        else:
+            if parent_key and target_key1 in str(parent_key) and key == target_key2:
+                out += [val]
+    return out
+
+
 def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits):
     gates_set = properties['gates_set']
-
-    def recursive_dict_loop(my_dict, parent_key=None, out=[], target_key1=None, target_key2=None):
-        for key, val in my_dict.items():
-            if isinstance(val, dict):
-                recursive_dict_loop(val, key, out, target_key1, target_key2)
-            else:
-                if parent_key and target_key1 in str(parent_key) and key == target_key2:
-                    out += [val]
-        return out
 
     vec = [np.mean(recursive_dict_loop(properties, target_key1='cx', target_key2='gate_error'))]
     vec += [np.mean(recursive_dict_loop(properties, target_key1='id', target_key2='gate_error'))]
@@ -47,21 +60,9 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
             [gate_counts.get(key, 0) for key in gates_set]
         ) * 0.01  # put it in the same order of magnitude as the expectation values
 
-    def count_gates_by_rotation_angle(circuit):
-        angles = []
-        for instr, qargs, cargs in circuit.data:
-            if instr.name in ['rx', 'ry', 'rz'] and len(qargs) == 1:
-                angles += [float(instr.params[0])]
-        bin_edges = np.arange(-2 * np.pi, 2 * np.pi + bin_size, bin_size)
-        counts, _ = np.histogram(angles, bins=bin_edges)
-        bin_labels = [f"{left:.2f} to {right:.2f}" for left, right in zip(bin_edges[:-1], bin_edges[1:])]
-        angle_bins = {label: count for label, count in zip(bin_labels, counts)}
-        return list(angle_bins.values())
-
     for i, circ in enumerate(circuits):
         gate_counts = count_gates_by_rotation_angle(circ)
-        X[i, len(vec) + len(gates_set): -num_qubits] = torch.tensor(
-            gate_counts) * 0.01  # put it in the same order of magnitude as the expectation values
+        X[i, len(vec) + len(gates_set): -num_qubits] = torch.tensor(gate_counts) * 0.01  # put it in the same order of magnitude as the expectation values
 
         if num_qubits > 1: assert len(noisy_exp_vals[i]) == num_qubits
         elif num_qubits == 1: assert noisy_exp_vals[i].isnumeric()
