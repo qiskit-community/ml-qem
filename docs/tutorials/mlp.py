@@ -14,6 +14,18 @@ import seaborn as sns
 from qiskit import QuantumCircuit
 
 
+def fix_random_seed(seed=0):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    print(f'random seed fixed to {seed}')
+
+
 def count_gates_by_rotation_angle(circuit, bin_size):
     angles = []
     for instr, qargs, cargs in circuit.data:
