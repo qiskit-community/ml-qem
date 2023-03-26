@@ -280,7 +280,7 @@ def make_plot(model, name="default"):
 def run_and_save_model(data_name, extra=""):
     dinfo = data_info[data_name]
     train_losses, test_losses, model = train_model_d123(data_name)
-    # plot_trained_model(train_losses, test_losses)
+    plot_trained_model(train_losses, test_losses)
     save_model(model, model_path=dinfo[MODEL_FILEPATH])
     loaded_model = load_model(dinfo[MODEL_FILEPATH])
     make_plot(model, name=f"{data_name}_{extra}_trained model")
@@ -314,8 +314,10 @@ def tst_failure11():
 
 
 if __name__ == "__main__":
-    failure_121()
-    # tst_failure11()
+    for data_name in ['d1', 'd2', 'd3']:
+        np.random.seed(0)
+        torch.random.manual_seed(0)
+        run_and_save_model(data_name)
 
 
 
