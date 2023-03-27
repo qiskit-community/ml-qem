@@ -14,6 +14,100 @@ import seaborn as sns
 from qiskit import QuantumCircuit
 
 
+class MLP1(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(MLP1, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        return x
+
+
+class MLP2(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, dropout_rate=0.5):
+        super(MLP2, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.bn1 = nn.BatchNorm1d(hidden_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_rate)
+
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.bn2 = nn.BatchNorm1d(hidden_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_rate)
+
+        self.fc3 = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        # First layer
+        x1 = self.fc1(x)
+        x1 = self.bn1(x1)
+        x1 = self.relu1(x1)
+        x1 = self.dropout1(x1)
+
+        # Second layer
+        x2 = self.fc2(x1)
+        x2 = self.bn2(x2)
+        x2 = self.relu2(x2)
+        x2 = self.dropout2(x2)
+
+        # Skip connection
+        x3 = x1 + x2
+
+        # Output layer
+        x_out = self.fc3(x3)
+        return x_out
+
+
+
+class MLP3(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, dropout_rate=0.3):
+        super(MLP3, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.bn1 = nn.BatchNorm1d(hidden_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_rate)
+
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.bn2 = nn.BatchNorm1d(hidden_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_rate)
+
+        self.fc3 = nn.Linear(hidden_size, hidden_size//3)
+        self.relu3 = nn.ReLU()
+        self.dropout3 = nn.Dropout(dropout_rate)
+        self.fc4 = nn.Linear(hidden_size//3, output_size)
+
+    def forward(self, x):
+        # First layer
+        x1 = self.fc1(x)
+        x1 = self.bn1(x1)
+        x1 = self.relu1(x1)
+        x1 = self.dropout1(x1)
+
+        # Second layer
+        x2 = self.fc2(x1)
+        x2 = self.bn2(x2)
+        x2 = self.relu2(x2)
+        x2 = self.dropout2(x2)
+
+        # Skip connection
+        x3 = x1 + x2
+
+        # Output layer
+        x4 = self.fc3(x3)
+        x4 = self.relu3(x4)
+        x4 = self.dropout3(x4)
+        x_out = self.fc4(x4)
+        return x_out
+
+
+
 def fix_random_seed(seed=0):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -38,7 +132,9 @@ def count_gates_by_rotation_angle(circuit, bin_size):
     return list(angle_bins.values())
 
 
-def recursive_dict_loop(my_dict, parent_key=None, out=[], target_key1=None, target_key2=None):
+def recursive_dict_loop(my_dict, parent_key=None, out=None, target_key1=None, target_key2=None):
+    if out is None: out = []
+
     for key, val in my_dict.items():
         if isinstance(val, dict):
             recursive_dict_loop(val, key, out, target_key1, target_key2)
@@ -90,6 +186,7 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
 
 
 
+
 if __name__ == '__main__':
     from qiskit.providers.fake_provider import FakeMontreal, FakeLima
     from blackwater.data.utils import get_backend_properties_v1
@@ -106,67 +203,3 @@ if __name__ == '__main__':
         X, y, gate_counts_all = encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, 4)
         print(X[0, 8:17])
         print(gate_counts_all)
-
-
-    # print(properties)
-    # for _ in range(5):
-    #     vec = [np.mean(recursive_dict_loop(properties, out=[], target_key1='cx', target_key2='gate_error'))]
-    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='id', target_key2='gate_error'))]
-    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='sx', target_key2='gate_error'))]
-    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='x', target_key2='gate_error'))]
-    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='rz', target_key2='gate_error'))]
-    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='readout_error'))]
-    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t1'))]
-    #     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t2'))]
-    #     vec = torch.tensor(vec) * 100  # put it in the same order of magnitude as the expectation values
-    #     print(vec)
-
-
-class MLP1(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(MLP1, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
-        return x
-
-
-class MLP2(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, dropout_rate=0.5):
-        super(MLP2, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.bn1 = nn.BatchNorm1d(hidden_size)
-        self.relu1 = nn.ReLU()
-        self.dropout1 = nn.Dropout(dropout_rate)
-
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.bn2 = nn.BatchNorm1d(hidden_size)
-        self.relu2 = nn.ReLU()
-        self.dropout2 = nn.Dropout(dropout_rate)
-
-        self.fc3 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        # First layer
-        x1 = self.fc1(x)
-        x1 = self.bn1(x1)
-        x1 = self.relu1(x1)
-        x1 = self.dropout1(x1)
-
-        # Second layer
-        x2 = self.fc2(x1)
-        x2 = self.bn2(x2)
-        x2 = self.relu2(x2)
-        x2 = self.dropout2(x2)
-
-        # Skip connection
-        x3 = x1 + x2
-
-        # Output layer
-        x_out = self.fc3(x3)
-        return x_out
