@@ -91,10 +91,36 @@ from qiskit.circuit.library import RXGate, ZGate, IGate, YGate, CXGate
 from qiskit_aer.noise import depolarizing_error, coherent_unitary_error, NoiseModel
 
 
-def coherent_cx_noise_model(
-        noise_model,
+def modify_and_add_noise_to_model(
+        theta: float = np.pi / 8,
+        FakeBackend=FakeLima(),
+        Simulator=AerSimulator
+) -> NoiseModel:
+    """
+    Modify a FakeBackend with by replacing its CX noise model with the 'add_coherent_cx_noise_to_model' function
+    """
+    noise_model = NoiseModel.from_backend(FakeBackend)
+    noise_dict = noise_model.to_dict()['errors']
+
+    ind_to_del = []
+    for i in range(len(noise_dict)):
+        if noise_dict[i]['operations'] == ['cx']:
+            ind_to_del += [i]
+
+    for i in sorted(ind_to_del, reverse=True):
+        del noise_dict[i]
+
+    new_noise_model = NoiseModel.from_dict({'errors': noise_dict})
+    new_noise_model = add_coherent_cx_noise_to_model(new_noise_model, theta=theta)
+    modified_backend = Simulator.from_backend(FakeBackend, noise_model=new_noise_model)
+
+    return modified_backend
+
+
+def add_coherent_cx_noise_to_model(
+        noise_model: NoiseModel,
         theta: float = 0,
-):
+) -> NoiseModel:
     """
     Add a noise channel with over-rotation on the CNOT gate on the target by theta to the backend
     """
