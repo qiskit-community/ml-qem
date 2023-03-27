@@ -114,7 +114,7 @@ def modify_and_add_noise_to_model(
     new_noise_model = add_coherent_cx_noise_to_model(new_noise_model, theta=theta)
     modified_backend = Simulator.from_backend(FakeBackend, noise_model=new_noise_model)
 
-    return modified_backend
+    return modified_backend, new_noise_model
 
 
 def add_coherent_cx_noise_to_model(
