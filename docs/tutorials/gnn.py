@@ -19,7 +19,7 @@ from torch_geometric.nn import GCNConv, global_mean_pool, Linear, ChebConv, SAGE
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 
-from tqdm.notebook import tqdm_notebook
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -63,6 +63,8 @@ from torch_geometric.nn import (
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 from torch_geometric.utils import to_dense_adj, to_dense_batch
+
+from mlp import MLP3
 
 
 class ExpValCircuitGraphModel(torch.nn.Module):
@@ -121,14 +123,116 @@ class ExpValCircuitGraphModel(torch.nn.Module):
 
 
 
+class ExpValCircuitGraphModel_2(torch.nn.Module):
+    def __init__(
+            self,
+            num_node_features: int,
+            hidden_channels: int,
+            exp_value_size: int = 4,
+            dropout: float = 0.5
+    ):
+        super().__init__()
+        self.transformer1 = TransformerConv(
+            num_node_features, hidden_channels,
+            heads=3,
+            dropout=0.1
+        )
+        self.pooling1 = ASAPooling(hidden_channels * 3, 0.5)
+        self.transformer2 = TransformerConv(
+            hidden_channels * 3, hidden_channels,
+            heads=2,
+            dropout=0.1
+        )
+        self.pooling2 = ASAPooling(hidden_channels * 2, 0.5)
+        self.body_seq = MLP2(
+            input_size=hidden_channels * 2 + 1 + exp_value_size,
+            hidden_size=hidden_channels,
+            output_size=exp_value_size,
+            dropout_rate=dropout
+        )
+
+    def forward(self,
+                exp_value, observable,
+                circuit_depth, nodes,
+                edge_index, batch):
+        graph = self.transformer1(nodes, edge_index)
+        graph, edge_index, _, batch, _ = self.pooling1(
+            graph, edge_index, batch=batch
+        )
+        graph = self.transformer2(graph, edge_index)
+        graph, edge_index, _, batch, _ = self.pooling2(
+            graph, edge_index, batch=batch
+        )
+        graph = global_mean_pool(graph, batch)
+        merge = torch.cat((
+            graph,
+            torch.squeeze(exp_value, 1),
+            circuit_depth
+        ), dim=1)
+
+        return self.body_seq(merge)
+
+
+
+
+class ExpValCircuitGraphModel_3(torch.nn.Module):
+    def __init__(
+            self,
+            num_node_features: int,
+            hidden_channels: int,
+            exp_value_size: int = 4,
+            dropout: float = 0.3
+    ):
+        super().__init__()
+        self.transformer1 = TransformerConv(
+            num_node_features, hidden_channels,
+            heads=5,
+            dropout=0.1
+        )
+        self.pooling1 = ASAPooling(hidden_channels * 5, 0.5)
+        self.transformer2 = TransformerConv(
+            hidden_channels * 5, hidden_channels,
+            heads=3,
+            dropout=0.1
+        )
+        self.pooling2 = ASAPooling(hidden_channels * 3, 0.5)
+        self.body_seq = MLP3(
+            input_size=hidden_channels * 3 + 1 + exp_value_size,
+            hidden_size=hidden_channels * 5,
+            output_size=exp_value_size,
+            dropout_rate=dropout
+        )
+
+    def forward(self,
+                exp_value, observable,
+                circuit_depth, nodes,
+                edge_index, batch):
+        graph = self.transformer1(nodes, edge_index)
+        graph, edge_index, _, batch, _ = self.pooling1(
+            graph, edge_index, batch=batch
+        )
+        graph = self.transformer2(graph, edge_index)
+        graph, edge_index, _, batch, _ = self.pooling2(
+            graph, edge_index, batch=batch
+        )
+        graph = global_mean_pool(graph, batch)
+        merge = torch.cat((
+            graph,
+            torch.squeeze(exp_value, 1),
+            circuit_depth
+        ), dim=1)
+        return self.body_seq(merge)
+
+
+
 
 if __name__ == "__main__":
     train_paths = [
-        './data/circ_parsed_pyg_data/all_z_exp/train/fakelima_depth1.json',
+        './data/mbd_datasets2/theta_0.05pi/train/step_1.json',
     ]
 
     val_paths = [
-        './data/circ_parsed_pyg_data/all_z_exp/val/fakelima/fakelima_depth1.json'
+        './data/mbd_datasets2/theta_0.05pi/val/step_1.json',
     ]
 
     BATCH_SIZE = 32
@@ -153,10 +257,10 @@ if __name__ == "__main__":
         print(data.noisy_0.shape)
         break
 
-    model = ExpValCircuitGraphModel(
+    model = ExpValCircuitGraphModel_3(
         num_node_features=22,
         hidden_channels=15,
-        exp_value_size=1,
+        exp_value_size=4,
     )
     criterion = torch.nn.MSELoss()
 
@@ -175,7 +279,7 @@ if __name__ == "__main__":
 
     N_EPOCHS = 100
 
-    progress = tqdm_notebook(range(N_EPOCHS), desc='Model training', leave=True)
+    progress = tqdm(range(N_EPOCHS), desc='Model training', leave=True)
     for epoch in progress:
         train_loss = 0.0
         model.train()
