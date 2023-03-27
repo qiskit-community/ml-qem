@@ -39,7 +39,7 @@ class CircuitGraphExpValMitigationDataset(Dataset):
 
         for path_to_file in paths:
             if path_to_file.endswith('.json'):
-                with open(  # pylint: disable=unspecified-encoding
+                with open(
                     path_to_file, "r"
                 ) as entries_file:
                     data: List[Dict[str, Any]] = json.load(entries_file)
@@ -47,7 +47,7 @@ class CircuitGraphExpValMitigationDataset(Dataset):
                         data = data[:num_samples]
 
             elif path_to_file.endswith('.pk'):
-                with open(  # pylint: disable=unspecified-encoding
+                with open(
                     path_to_file, "rb"
                 ) as entries_file:
                     data: List[Dict[str, Any]] = pickle.load(entries_file)
