@@ -226,6 +226,59 @@ class ExpValCircuitGraphModel_3(torch.nn.Module):
 
 
 
+class ExpValCircuitGraphModel_4(torch.nn.Module):
+    # Inferior to 3
+    def __init__(
+            self,
+            num_node_features: int,
+            hidden_channels: int,
+            exp_value_size: int = 4,
+            dropout: float = 0.3
+    ):
+        super().__init__()
+        self.transformer1 = TransformerConv(
+            num_node_features, hidden_channels,
+            heads=5,
+            dropout=0.1
+        )
+        self.pooling1 = ASAPooling(hidden_channels * 5, 0.5)
+        self.transformer2 = TransformerConv(
+            hidden_channels * 5, hidden_channels,
+            heads=3,
+            dropout=0.1
+        )
+        self.pooling2 = ASAPooling(hidden_channels * 3, 0.5)
+        self.body_seq = MLP3(
+            input_size=hidden_channels * 3 + 1 + exp_value_size,
+            hidden_size=hidden_channels,
+            output_size=exp_value_size,
+            dropout_rate=dropout
+        )
+
+    def forward(self,
+                exp_value, observable,
+                circuit_depth, nodes,
+                edge_index, batch):
+        graph = self.transformer1(nodes, edge_index)
+        graph, edge_index, _, batch, _ = self.pooling1(
+            graph, edge_index, batch=batch
+        )
+        graph = self.transformer2(graph, edge_index)
+        graph, edge_index, _, batch, _ = self.pooling2(
+            graph, edge_index, batch=batch
+        )
+        graph = global_mean_pool(graph, batch)
+        merge = torch.cat((
+            graph,
+            torch.squeeze(exp_value, 1),
+            circuit_depth
+        ), dim=1)
+        return self.body_seq(merge)
+
+
+
+
+
 if __name__ == "__main__":
     train_paths = [
         './data/mbd_datasets2/theta_0.05pi/train/step_1.json',
