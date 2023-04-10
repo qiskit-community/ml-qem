@@ -176,7 +176,7 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
         X[i, len(vec) + len(gates_set): -num_qubits] = torch.tensor(gate_counts) * 0.01  # put it in the same order of magnitude as the expectation values
 
         if num_qubits > 1: assert len(noisy_exp_vals[i]) == num_qubits
-        elif num_qubits == 1: assert noisy_exp_vals[i].isnumeric()
+        elif num_qubits == 1: assert isinstance(noisy_exp_vals[i], float)
 
         X[i, -num_qubits:] = torch.tensor(noisy_exp_vals[i])
 
