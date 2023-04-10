@@ -155,3 +155,8 @@ docs/tutorials/data/tiling2/train/step6_q0-q7_total8_2.json
 docs/tutorials/data/mbd_datasets2/theta_0.05pi/circuits.pk
 /docs/tutorials/obselete/
 /docs/tutorials/data/ising_dataset/tmp_val/
+docs/tutorials/data/tiling2/val/step6_q0-q7_total8.pk
+docs/tutorials/data/circ_cut2/train/step6_cut_23_67.pk
+docs/tutorials/data/circ_cut2/train/step6_cut_01_45.pk
+docs/tutorials/data/circ_cut2/train/step6_cut_12_56.pk
+docs/tutorials/data/circ_cut2/train/step6_cut_34.pk
