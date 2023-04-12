@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import warnings
-from tqdm.notebook import tqdm
+from tqdm import tqdm
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
@@ -41,8 +42,8 @@ class AddNoise:
         self.up_state = 0.5 * (Operator(IGate()) + Operator(ZGate()))
         self.down_state = 0.5 * (Operator(IGate()) - Operator(ZGate()))
 
-    def add_coherent_noise(self, theta, uniform: bool=False, add_depolarization: bool=True,
-                           seed: int=None, add_coherent: bool=True) -> NoiseModel:
+    def add_coherent_noise(self, theta, uniform: bool = False, add_depolarization: bool = True,
+                           seed: int = None, add_coherent: bool = True) -> NoiseModel:
         self.theta = theta
         self.uniform = uniform
         self.add_depolarization = add_depolarization
@@ -70,7 +71,8 @@ class AddNoise:
         return modified_backend, new_noise_model
 
     def get_over_rotated_cx_uni_err(self, theta):
-        over_rotated_cnot = Operator(IGate()).tensor(self.up_state) + 1.0j * Operator(RXGate(np.pi + theta)).tensor(self.down_state)
+        over_rotated_cnot = Operator(IGate()).tensor(self.up_state) + 1.0j * Operator(RXGate(np.pi + theta)).tensor(
+            self.down_state)
         err_unitary = over_rotated_cnot @ self.cnot
         return coherent_unitary_error(err_unitary)
 
