@@ -480,7 +480,7 @@ def generate_disorder(n_qubits, disorder_strength=np.pi, seed=None):
     return disorder
 
 
-def construct_mbl_circ_with_cut(num_qubit, disorder, theta, steps, broken_connections=[]):
+def construct_mbl_circ_with_cut(num_qubit, disorder, theta, steps, broken_connections=None):
     """Construct the circuit for Floquet dynamics of an MBL circuit.
 
     Args:
@@ -490,6 +490,9 @@ def construct_mbl_circ_with_cut(num_qubit, disorder, theta, steps, broken_connec
         steps (int): Number of steps.
         broken_connections (list[tuple]): Qubit pairs that are should not interact in the MBL circuit written as (i, j) where i < j
     """
+    if broken_connections is None:
+        broken_connections = []
+
     qc = QuantumCircuit(num_qubit)
 
     # Hard domain wall initial state
@@ -523,16 +526,10 @@ def construct_mbl_circ_with_cut(num_qubit, disorder, theta, steps, broken_connec
 
 
 if __name__ == '__main__':
-    # num_qubits = 8
-    # disorders = generate_disorder(num_qubits)
-    # theta = 0.05 * np.pi  # Interaction strength up to np.pi
-    # steps = 2
-    # qc = construct_mbl_circuit(num_qubits, disorders, theta, steps)
-    # print(qc.draw(fold=-1, idle_wires=False))
-    # qc = construct_mbl_circuit(num_qubits, disorders, theta, steps, [(1, 2), (6, 7)])
-    # print(qc.draw(fold=-1, idle_wires=False))
+    qc = construct_mbl_circ_with_cut(8, generate_disorder(8), 0.1*np.pi, 2, [(1, 2), (5, 6)])
+    qc.draw('mpl', fold=-1).show()
 
-    num_steps = 0
-    num_qubit = 8
-    rb = construct_mbl_circuit(num_qubit, [], 0, num_steps, completely_random=True)
-    print(rb.draw(fold=-1, idle_wires=False))
+    # num_steps = 0
+    # num_qubit = 8
+    # rb = construct_mbl_circuit(num_qubit, [], 0, num_steps, completely_random=True)
+    # print(rb.draw(fold=-1, idle_wires=False))
