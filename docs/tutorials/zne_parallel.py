@@ -185,6 +185,10 @@ if __name__ == '__main__':
     print(mitigated)
 
     ###############################################################################
+    with open('./zne_mitigated/ising_init_from_qasm.pk', 'wb') as file:
+        pickle.dump(mitigated, file)
+
+    ###############################################################################
     fix_random_seed(0)
 
     distances = []
@@ -197,7 +201,7 @@ if __name__ == '__main__':
     extrapolator = PolynomialExtrapolator(degree=degree)
 
     sl = slice(0, 100000)
-    for mitigated, ideal, noisy in tqdm(zip(mitigated[sl], test_ideal_exp_vals[sl], test_noisy_exp_vals[sl]),
+    for miti, ideal, noisy in tqdm(zip(mitigated[sl], test_ideal_exp_vals[sl], test_noisy_exp_vals[sl]),
                                    total=len(test_circuits[sl])):
         # to_print = np.zeros((3, 4))
         # to_print[0] = np.array(ideal)
@@ -207,19 +211,19 @@ if __name__ == '__main__':
 
         imbalance_ideal = calc_imbalance([ideal], even_qubits, odd_qubits)[0]
         imbalance_noisy = calc_imbalance([noisy], even_qubits, odd_qubits)[0]
-        imbalance_mitigated = calc_imbalance([mitigated], even_qubits, odd_qubits)[0]
+        imbalance_mitigated = calc_imbalance([miti], even_qubits, odd_qubits)[0]
         for q in range(4):
             ideal_q = ideal[q]
             noisy_q = noisy[q]
-            mitigated = mitigated[q]
+            miti_q = miti[q]
             distances.append({
                 f"ideal_{q}": ideal_q,
                 f"noisy_{q}": noisy_q,
-                f"ngm_mitigated_{q}": mitigated,
+                f"ngm_mitigated_{q}": miti_q,
                 f"dist_noisy_{q}": np.abs(ideal_q - noisy_q),
-                f"dist_mitigated_{q}": np.abs(ideal_q - mitigated),
+                f"dist_mitigated_{q}": np.abs(ideal_q - miti_q),
                 f"dist_sq_noisy_{q}": np.square(ideal_q - noisy_q),
-                f"dist_sq_mitigated_{q}": np.square(ideal_q - mitigated),
+                f"dist_sq_mitigated_{q}": np.square(ideal_q - miti_q),
                 "imb_ideal": imbalance_ideal,
                 "imb_noisy": imbalance_noisy,
                 "imb_ngm": imbalance_mitigated,
