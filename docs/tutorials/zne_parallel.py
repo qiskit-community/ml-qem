@@ -151,7 +151,10 @@ def get_zne_expval_parallel_single_z(
 
 
 ############################################################
-test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_circuits('./data/ising_init_from_qasm/val/', '.pk')
+DATA_FOLDER = './data/haoran_mbd/random_circuits/val/'
+SAVE_PATH = './zne_mitigated/random_circuits.pk'
+
+test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_circuits(DATA_FOLDER, '.pk')
 print(len(test_circuits))
 test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
 
@@ -184,13 +187,13 @@ if __name__ == '__main__':
     mitigated *= -1
     print(mitigated)
 
-    with open('./zne_mitigated/ising_init_from_qasm.pk', 'wb') as file:
+    with open(SAVE_PATH, 'wb') as file:
         pickle.dump(mitigated, file)
     ###############################################################################
 
     ###############################################################################
-    with open('./zne_mitigated/ising_init_from_qasm.pk', 'wb') as file:
-        mitigated = pickle.load(file)
+    # with open(SAVE_PATH, 'wb') as file:
+    #     mitigated = pickle.load(file)
     ###############################################################################
 
     ###############################################################################
