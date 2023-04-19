@@ -34,12 +34,12 @@ from qiskit.circuit.library import CXGate, RXGate, IGate, ZGate
 from qiskit.providers.fake_provider import FakeMontreal, FakeLima
 
 from blackwater.data.utils import (
-    generate_random_pauli_sum_op,
-    create_estimator_meas_data,
-    circuit_to_graph_data_json,
+    # generate_random_pauli_sum_op,
+    # create_estimator_meas_data,
+    # circuit_to_graph_data_json,
     get_backend_properties_v1,
-    encode_pauli_sum_op,
-    create_meas_data_from_estimators
+    # encode_pauli_sum_op,
+    # create_meas_data_from_estimators
 )
 
 from mlp import MLP1, MLP2, MLP3, encode_data
@@ -49,6 +49,11 @@ from mbd_utils import cal_z_exp, generate_disorder, construct_mbl_circuit, calc_
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import multiprocessing
+from multiprocessing import Pool
+from functools import partial
+
+############################################################
 backend = FakeLima()
 properties = get_backend_properties_v1(backend)
 
@@ -58,6 +63,7 @@ backend_noisy = AerSimulator.from_backend(FakeLima())  # Noisy
 
 run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
 run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
+############################################################
 
 
 def fix_random_seed(seed=0):
@@ -90,11 +96,6 @@ def load_circuits(data_dir, f_ext='.json'):
                 noisy_exp_vals.append(entry['noisy_exp_values'])
     return circuits, ideal_exp_vals, noisy_exp_vals
 
-
-
-import multiprocessing
-from multiprocessing import Pool
-from functools import partial
 
 def get_measurement_qubits(qc, num_qubit):
     measurement_qubits = []
@@ -149,13 +150,15 @@ def get_zne_expval_parallel_single_z(
     return zne_strategy, estimator, ob_list_all, shots, circs
 
 
-
+############################################################
 test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_circuits('./data/ising_init_from_qasm/val/', '.pk')
 print(len(test_circuits))
 test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
 
 extrapolator = PolynomialExtrapolator(degree=2)
-zne_strategy, estimator, ob_list_all, shots, circs = get_zne_expval_parallel_single_z(test_circuits, extrapolator, backend_noisy)
+zne_strategy, estimator, ob_list_all, shots, circs = get_zne_expval_parallel_single_z(test_circuits, extrapolator,
+                                                                                      backend_noisy)
+############################################################
 
 
 def process_circ_ob_list(args):
@@ -166,14 +169,11 @@ def process_circ_ob_list(args):
     return i, values
 
 
+
 if __name__ == '__main__':
+    ###############################################################################
     mitigated = np.zeros((len(circs), 4))
     iterable = [(i, circ, ob_list) for i, (circ, ob_list) in enumerate(zip(circs, ob_list_all))]
-
-
-    # with Pool() as pool:
-    #     results = pool.map(process_circ_ob_list, iterable)
-
     iterable = tqdm(iterable, total=len(circs), desc="Processing", ncols=80)
     with Pool() as pool:
         results = pool.map(process_circ_ob_list, iterable)
@@ -184,13 +184,17 @@ if __name__ == '__main__':
     mitigated *= -1
     print(mitigated)
 
-    ###############################################################################
     with open('./zne_mitigated/ising_init_from_qasm.pk', 'wb') as file:
         pickle.dump(mitigated, file)
+    ###############################################################################
+
+    ###############################################################################
+    with open('./zne_mitigated/ising_init_from_qasm.pk', 'wb') as file:
+        mitigated = pickle.load(file)
+    ###############################################################################
 
     ###############################################################################
     fix_random_seed(0)
-
     distances = []
 
     num_spins = 4
@@ -203,11 +207,6 @@ if __name__ == '__main__':
     sl = slice(0, 100000)
     for miti, ideal, noisy in tqdm(zip(mitigated[sl], test_ideal_exp_vals[sl], test_noisy_exp_vals[sl]),
                                    total=len(test_circuits[sl])):
-        # to_print = np.zeros((3, 4))
-        # to_print[0] = np.array(ideal)
-        # to_print[1] = np.array(noisy)
-        # to_print[2] = np.array(ngm_mitigated)
-        # print(to_print)
 
         imbalance_ideal = calc_imbalance([ideal], even_qubits, odd_qubits)[0]
         imbalance_noisy = calc_imbalance([noisy], even_qubits, odd_qubits)[0]
