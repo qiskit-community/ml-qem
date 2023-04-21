@@ -52,17 +52,30 @@ import seaborn as sns
 import multiprocessing
 from multiprocessing import Pool
 from functools import partial
+from noise_utils import AddNoise
+
+############################################################
+# backend = FakeLima()
+# properties = get_backend_properties_v1(backend)
+#
+# ## Local
+# backend_ideal = QasmSimulator()  # Noiseless
+# backend_noisy = AerSimulator.from_backend(FakeLima())  # Noisy
+#
+# run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
+# run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
+############################################################
 
 ############################################################
 backend = FakeLima()
 properties = get_backend_properties_v1(backend)
 
-## Local
-backend_ideal = QasmSimulator()  # Noiseless
-backend_noisy = AerSimulator.from_backend(FakeLima())  # Noisy
+# Local, coherent noise
+backend_ideal = QasmSimulator() # Noiseless
+backend_noisy_coherent, noise_model = AddNoise(backend=backend).add_coherent_noise(seed=0, theta=np.pi * 0.04, uniform=False, add_depolarization=True)
 
 run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
-run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
+run_config_noisy_coherent = {'shots': 10000, 'backend': backend_noisy_coherent, 'name': 'noisy_coherent'}
 ############################################################
 
 
@@ -150,18 +163,22 @@ def get_zne_expval_parallel_single_z(
     return zne_strategy, estimator, ob_list_all, shots, circs
 
 
-############################################################
-DATA_FOLDER = './data/haoran_mbd/random_circuits/val/'
-SAVE_PATH = './zne_mitigated/random_circuits.pk'
+########################################################################################################################
+# DATA_FOLDER = './data/haoran_mbd/random_circuits/val/'
+# SAVE_PATH = './zne_mitigated/random_circuits.pk'
+DATAFOLDER = './data/ising_init_from_qasm_coherent/val/'
+SAVE_PATH = './zne_mitigated/ising_init_from_qasm_coherent.pk'
+DEGREE = 3
+BACKEND = backend_noisy_coherent
 
 test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_circuits(DATA_FOLDER, '.pk')
 print(len(test_circuits))
 test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
 
-extrapolator = PolynomialExtrapolator(degree=2)
+extrapolator = PolynomialExtrapolator(degree=DEGREE)
 zne_strategy, estimator, ob_list_all, shots, circs = get_zne_expval_parallel_single_z(test_circuits, extrapolator,
-                                                                                      backend_noisy)
-############################################################
+                                                                                      BACKEND)
+########################################################################################################################
 
 
 def process_circ_ob_list(args):
@@ -204,8 +221,7 @@ if __name__ == '__main__':
     even_qubits = np.linspace(0, num_spins, int(num_spins / 2), endpoint=False)
     odd_qubits = np.linspace(1, num_spins + 1, int(num_spins / 2), endpoint=False)
 
-    degree = 2
-    extrapolator = PolynomialExtrapolator(degree=degree)
+    extrapolator = PolynomialExtrapolator(degree=DEGREE)
 
     sl = slice(0, 100000)
     for miti, ideal, noisy in tqdm(zip(mitigated[sl], test_ideal_exp_vals[sl], test_noisy_exp_vals[sl]),
