@@ -166,9 +166,9 @@ def get_zne_expval_parallel_single_z(
 ########################################################################################################################
 # DATA_FOLDER = './data/haoran_mbd/random_circuits/val/'
 # SAVE_PATH = './zne_mitigated/random_circuits.pk'
-DATAFOLDER = './data/ising_init_from_qasm_coherent/val/'
-SAVE_PATH = './zne_mitigated/ising_init_from_qasm_coherent.pk'
-DEGREE = 3
+DATA_FOLDER = './data/ising_init_from_qasm_coherent/val_extra/'
+DEGREE = 2
+SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_coherent_extra_degree{DEGREE}.pk'
 BACKEND = backend_noisy_coherent
 
 test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_circuits(DATA_FOLDER, '.pk')
