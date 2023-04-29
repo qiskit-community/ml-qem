@@ -1,2 +1,2 @@
 """Data io module."""
-from .io import ExpValDataWriter, ExpValDataReader, Reader, Writer
+from .dataio import ExpValDataWriter, ExpValDataReader, Reader, Writer
