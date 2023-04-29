@@ -11,7 +11,7 @@ from qiskit.circuit.random import random_circuit
 from qiskit.opflow import I, X, Z
 from qiskit.primitives import Estimator, EstimatorResult
 from qiskit.providers import Options
-from qiskit.providers.fake_provider import FakeLima
+from qiskit.providers.fake_provider import FakeLimaV2
 
 from blackwater.data.utils import generate_random_pauli_sum_op
 from blackwater.library.ngem.estimator import ngem
@@ -21,9 +21,11 @@ from blackwater.library.ngem.estimator import ngem
 class DummyModel(torch.nn.Module):
     """Dummy model for tests."""
 
-    def forward(self, exp_value, observable, circuit_depth, nodes, edge_index, batch):
+    def forward(
+        self, circuit_nodes, edges, noisy_exp_value, observable, circuit_depth, batch
+    ):
         """Forward pass."""
-        return exp_value
+        return noisy_exp_value
 
 
 class TestEstimator(TestCase):
@@ -32,12 +34,12 @@ class TestEstimator(TestCase):
     def test_estimator(self):
         """Tests estimator."""
         model = DummyModel()
-        lima = FakeLima()
+        lima = FakeLimaV2()
 
         circuit = transpile(random_circuit(5, 2, measure=False), lima)
         obs = generate_random_pauli_sum_op(5, 1, coeff=1.0)
 
-        ngem_estimator = ngem(Estimator, model=model, backend=lima)
+        ngem_estimator = ngem(Estimator, model=model, backend=lima, skip_transpile=True)
         estimator = ngem_estimator()
         job = estimator.run([circuit], [obs])
         result = job.result()
@@ -47,7 +49,7 @@ class TestEstimator(TestCase):
     def test_vqe_with_estimator(self):
         """Tests estimator in VQE."""
         model = DummyModel()
-        lima = FakeLima()
+        lima = FakeLimaV2()
 
         operator = (
             (-1.052373245772859 * I ^ I)
