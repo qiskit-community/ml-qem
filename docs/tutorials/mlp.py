@@ -145,8 +145,11 @@ def recursive_dict_loop(my_dict, parent_key=None, out=None, target_key1=None, ta
 
 
 
-def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits):
+def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits, meas_bases=None):
     gates_set = sorted(properties['gates_set'])     # must sort!
+
+    if meas_bases is None:
+        meas_bases = [[]]
 
     vec = [np.mean(recursive_dict_loop(properties, out=[], target_key1='cx', target_key2='gate_error'))]
     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='id', target_key2='gate_error'))]
@@ -161,24 +164,35 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
     bin_size = 0.1 * np.pi
     num_angle_bins = int(np.ceil(4 * np.pi / bin_size))
 
-    X = torch.zeros([len(circuits), len(vec) + len(gates_set) + num_angle_bins + num_qubits])
+    X = torch.zeros([len(circuits), len(vec) + len(gates_set) + num_angle_bins + num_qubits + len(meas_bases[0])])
 
-    X[:, :len(vec)] = vec[None, :]
+    vec_slice = slice(0, len(vec))
+    gate_counts_slice = slice(len(vec), len(vec)+len(gates_set))
+    angle_bins_slice = slice(len(vec)+len(gates_set), len(vec)+len(gates_set)+num_angle_bins)
+    exp_val_slice = slice(len(vec)+len(gates_set)+num_angle_bins, len(vec)+len(gates_set)+num_angle_bins+num_qubits)
+    meas_basis_slice = slice(len(vec)+len(gates_set)+num_angle_bins+num_qubits, len(X[0]))
+
+    X[:, vec_slice] = vec[None, :]
 
     for i, circ in enumerate(circuits):
         gate_counts_all = circ.count_ops()
-        X[i, len(vec):len(vec) + len(gates_set)] = torch.tensor(
+        X[i, gate_counts_slice] = torch.tensor(
             [gate_counts_all.get(key, 0) for key in gates_set]
         ) * 0.01  # put it in the same order of magnitude as the expectation values
 
     for i, circ in enumerate(circuits):
         gate_counts = count_gates_by_rotation_angle(circ, bin_size)
-        X[i, len(vec) + len(gates_set): -num_qubits] = torch.tensor(gate_counts) * 0.01  # put it in the same order of magnitude as the expectation values
+        X[i, angle_bins_slice] = torch.tensor(gate_counts) * 0.01  # put it in the same order of magnitude as the expectation values
 
         if num_qubits > 1: assert len(noisy_exp_vals[i]) == num_qubits
         elif num_qubits == 1: assert isinstance(noisy_exp_vals[i], float)
 
-        X[i, -num_qubits:] = torch.tensor(noisy_exp_vals[i])
+        X[i, exp_val_slice] = torch.tensor(noisy_exp_vals[i])
+
+    if meas_bases != [[]]:
+        assert len(meas_bases) == len(circuits)
+        for i, basis in enumerate(meas_bases):
+            X[i, meas_basis_slice] = torch.tensor(basis)
 
     y = torch.tensor(ideal_exp_vals, dtype=torch.float32)
 
