@@ -240,6 +240,7 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
 #     return X, y
 
 
+
 if __name__ == '__main__':
     from qiskit.providers.fake_provider import FakeMontreal, FakeLima
     from blackwater.data.utils import get_backend_properties_v1
