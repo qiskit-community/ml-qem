@@ -1,3 +1,4 @@
+import qiskit.circuit.random
 import torch, random
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -200,20 +201,66 @@ def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits
 
 
 
+# def encode_data_old(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits):
+#     gates_set = sorted(properties['gates_set'])     # must sort!
+#
+#     vec = [np.mean(recursive_dict_loop(properties, out=[], target_key1='cx', target_key2='gate_error'))]
+#     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='id', target_key2='gate_error'))]
+#     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='sx', target_key2='gate_error'))]
+#     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='x', target_key2='gate_error'))]
+#     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='rz', target_key2='gate_error'))]
+#     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='readout_error'))]
+#     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t1'))]
+#     vec += [np.mean(recursive_dict_loop(properties, out=[], target_key1='', target_key2='t2'))]
+#     vec = torch.tensor(vec) * 100  # put it in the same order of magnitude as the expectation values
+#     bin_size = 0.1 * np.pi
+#     num_angle_bins = int(np.ceil(4 * np.pi / bin_size))
+#
+#     X = torch.zeros([len(circuits), len(vec) + len(gates_set) + num_angle_bins + num_qubits])
+#
+#     X[:, :len(vec)] = vec[None, :]
+#
+#     for i, circ in enumerate(circuits):
+#         gate_counts_all = circ.count_ops()
+#         X[i, len(vec):len(vec) + len(gates_set)] = torch.tensor(
+#             [gate_counts_all.get(key, 0) for key in gates_set]
+#         ) * 0.01  # put it in the same order of magnitude as the expectation values
+#
+#     for i, circ in enumerate(circuits):
+#         gate_counts = count_gates_by_rotation_angle(circ, bin_size)
+#         X[i, len(vec) + len(gates_set): -num_qubits] = torch.tensor(gate_counts) * 0.01  # put it in the same order of magnitude as the expectation values
+#
+#         if num_qubits > 1: assert len(noisy_exp_vals[i]) == num_qubits
+#         elif num_qubits == 1: assert isinstance(noisy_exp_vals[i], float)
+#
+#         X[i, -num_qubits:] = torch.tensor(noisy_exp_vals[i])
+#
+#     y = torch.tensor(ideal_exp_vals, dtype=torch.float32)
+#
+#     return X, y
+
 
 if __name__ == '__main__':
     from qiskit.providers.fake_provider import FakeMontreal, FakeLima
     from blackwater.data.utils import get_backend_properties_v1
+    from qiskit.quantum_info import SparsePauliOp
+    from blackwater.data.utils import encode_pauli_sum_op
     backend = FakeLima()
     print(list({g.gate for g in backend.properties().gates}))
     properties = get_backend_properties_v1(backend)
 
     circuit_qasm = 'OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[5];\ncreg meas[4];\nrz(pi/2) q[1];\nsx q[1];\nrz(-pi/2) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(-pi/4) q[3];\nsx q[3];\nrz(-pi/2) q[3];\nx q[4];\ncx q[4],q[3];\nrz(1.3504439735577742) q[3];\nsx q[3];\nrz(-2.343957397662077) q[3];\nsx q[3];\nrz(-1.4156195211105356) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(pi/20) q[4];\nsx q[4];\nrz(2.0916100803511672) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(2.0916100803511655) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-3.3042128505379065) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nrz(1.906049550783556) q[3];\nsx q[3];\nrz(-0.4486568037754637) q[3];\nsx q[3];\nrz(-1.201830429096015) q[3];\nsx q[4];\nrz(-2.9845130209103035) q[4];\nsx q[4];\nrz(1.036297431763694) q[4];\ncx q[4],q[3];\nrz(-1.3504439735577738) q[3];\nsx q[3];\nrz(-0.7976352559277142) q[3];\nsx q[3];\nrz(1.7259731324792575) q[3];\ncx q[1],q[3];\nsx q[1];\nrz(-1.725836788316796) q[1];\nsx q[1];\nrz(-3.1162625188573028) q[1];\ncx q[2],q[1];\nsx q[1];\nrz(1.7278759594743862) q[1];\nsx q[1];\nrz(-pi) q[1];\nsx q[2];\nrz(2.9845130209103035) q[2];\nsx q[2];\nrz(-0.9186429592174754) q[2];\nsx q[3];\nrz(1.7278759594743862) q[3];\nsx q[3];\nrz(-4.349014256811735) q[3];\nsx q[4];\nrz(-1.4928778811476757) q[4];\nsx q[4];\nrz(-0.13653026392406042) q[4];\ncx q[3],q[4];\nsx q[3];\nrz(1.7278759594743862) q[3];\nsx q[3];\ncx q[1],q[3];\nsx q[1];\nrz(2.9845130209103035) q[1];\nsx q[1];\nrz(-0.16065255166893166) q[1];\nsx q[3];\nrz(1.7278759594743862) q[3];\nsx q[3];\nrz(-1.2074216032219418) q[3];\nsx q[4];\nrz(1.7278759594743862) q[4];\nsx q[4];\nrz(-2.091610080351167) q[4];\nbarrier q[2],q[1],q[3],q[4];\nmeasure q[2] -> meas[0];\nmeasure q[1] -> meas[1];\nmeasure q[3] -> meas[2];\nmeasure q[4] -> meas[3];\n'
     circuits = [QuantumCircuit.from_qasm_str(circuit_qasm)]
+    # circuits = [qiskit.circuit.random.random_circuit(4, 10, 2, measure=True, seed=0)]
     ideal_exp_vals = [1, -1, 1, -1]
-    noisy_exp_vals = [[0.9, -0.9, 0.9, -0.9]]
+    noisy_exp_vals = [[0.9, -0.92, 0.89, -0.94]]
 
-    for _ in range(2):
-        X, y, gate_counts_all = encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, 4)
-        print(X[0, 8:17])
-        print(gate_counts_all)
+    for _ in range(1):
+        # X1, y1 = encode_data_old(circuits, properties, ideal_exp_vals, noisy_exp_vals, 4)
+        # print(X1[0, :])
+        meas_bases = encode_pauli_sum_op(SparsePauliOp('XYZI'))
+        print(meas_bases)
+        X2, y2 = encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, 4, meas_bases=meas_bases)
+        print(X2[0, :])
+        # assert (X1 == X2).all()
+        # assert (y1 == y2).all()
