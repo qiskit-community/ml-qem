@@ -89,6 +89,7 @@ from qiskit.circuit.exceptions import CircuitError
 from qiskit.quantum_info import Operator
 from qiskit.circuit.library import RXGate, ZGate, IGate, YGate, CXGate
 from qiskit_aer.noise import depolarizing_error, coherent_unitary_error, NoiseModel
+from qiskit.result import marginal_counts
 
 
 def modify_and_add_noise_to_model(
@@ -382,7 +383,7 @@ def calc_imbalance(single_z_dataset, even_qubits, odd_qubits):
     return (N_odd - N_even) / (N_even + N_odd)
 
 
-def cal_all_z_exp(counts):
+def cal_all_z_exp(counts, marginal_over=None):
     """
     Compute the Z^N expectation value, where N is the number of bits in each bitstring
 
@@ -396,13 +397,17 @@ def cal_all_z_exp(counts):
     -------
     all_z_exp : float
     """
+    if marginal_over:
+        counts = marginal_counts(counts, indices=marginal_over)
+
     shots = sum(list(counts.values()))
     all_z_exp = 0
     for key, value in counts.items():
         num_ones = key.count('1')
-        sign = (-1) ** (num_ones)  # Sign of the term in 'key' depends on the number of 0's, e.g. '11' is +, '110' is -
+        sign = (-1) ** num_ones  # Sign of the term in 'key' depends on the number of 0's, e.g. '11' is +, '110' is -
         all_z_exp += sign * value
     all_z_exp = all_z_exp / shots
+
     return all_z_exp
 
 
