@@ -168,3 +168,6 @@ docs/tutorials/model/ising_init_from_qasm_coherent/rfr_list.pk
 docs/tutorials/model/ising_init_from_qasm_coherent/rfr_list.pk
 /docs/tutorials/data/ising_init_from_qasm_coherent/val_extra/
 /docs/tutorials/data/ising_init_from_qasm/val_extra/
+docs/tutorials/data/ising_init_from_qasm_tomo/train/step_10.pk
+docs/tutorials/data/ising_init_from_qasm_tomo/step_10_q6.pk
+docs/tutorials/data/ising_init_from_qasm_tomo/val/step_10.pk
