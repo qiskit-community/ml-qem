@@ -142,11 +142,14 @@ def recursive_dict_loop(my_dict, parent_key=None, out=None, target_key1=None, ta
         else:
             if parent_key and target_key1 in str(parent_key) and key == target_key2:
                 out += [val]
-    return out
+    return out or 0.
 
 
 
 def encode_data(circuits, properties, ideal_exp_vals, noisy_exp_vals, num_qubits, meas_bases=None):
+    if len(noisy_exp_vals[0]) == 1:
+        noisy_exp_vals = [x[0] for x in noisy_exp_vals]
+
     gates_set = sorted(properties['gates_set'])     # must sort!
 
     if meas_bases is None:
