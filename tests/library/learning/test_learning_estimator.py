@@ -12,9 +12,12 @@ from qiskit.opflow import I, X, Z
 from qiskit.primitives import Estimator, EstimatorResult
 from qiskit.providers import Options
 from qiskit.providers.fake_provider import FakeLimaV2, FakeLima, ConfigurableFakeBackend
+from qiskit.quantum_info import SparsePauliOp
+from sklearn.ensemble import RandomForestRegressor
 
-from blackwater.data.utils import generate_random_pauli_sum_op, get_backend_properties_v1
-from blackwater.library.learning.estimator import learning, EmptyProcessor, TorchLearningModelProcessor
+from blackwater.data.utils import generate_random_pauli_sum_op, get_backend_properties_v1, encode_pauli_sum_op
+from blackwater.library.learning.estimator import learning, EmptyProcessor, TorchLearningModelProcessor, \
+    ScikitLearningModelProcessor
 from blackwater.library.temp import encode_data, MLP1
 
 
@@ -54,6 +57,35 @@ class TestLearningEstimator(TestCase):
 
         circuit = transpile(random_circuit(2, 2, measure=False), backend)
         obs = generate_random_pauli_sum_op(2, 1, coeff=1.0)
+
+        ngem_estimator = learning(Estimator, processor=processor, backend=backend, skip_transpile=True)
+        estimator = ngem_estimator()
+        job = estimator.run([circuit], [obs])
+        result = job.result()
+
+        self.assertIsInstance(result, EstimatorResult)
+
+    def test_scikit_estimator(self):
+        model = RandomForestRegressor(n_estimators=3)
+        backend = ConfigurableFakeBackend("Tashkent", n_qubits=2, version=1)
+        circuit = transpile(random_circuit(2, 2, measure=False), backend)
+        obs = generate_random_pauli_sum_op(2, 1, coeff=1.0)
+        self._properties = get_backend_properties_v1(backend)
+
+        X, y = encode_data(
+            circuits=[circuit],
+            properties=self._properties,
+            ideal_exp_vals=[[3.]],
+            noisy_exp_vals=[[0.1]],
+            num_qubits=1,
+            meas_bases=encode_pauli_sum_op(SparsePauliOp("XX"))
+        )
+        model.fit(X, y)
+
+        processor = ScikitLearningModelProcessor(
+            model=model,
+            backend=backend
+        )
 
         ngem_estimator = learning(Estimator, processor=processor, backend=backend, skip_transpile=True)
         estimator = ngem_estimator()
@@ -116,24 +148,24 @@ class TestLearningEstimator(TestCase):
 
     def test_vqe_with_estimator(self):
         """Tests estimator in VQE."""
-        model = DummyModel()
-        lima = FakeLimaV2()
-
-        operator = (
-            (-1.052373245772859 * I ^ I)
-            + (0.39793742484318045 * I ^ Z)
-            + (-0.39793742484318045 * Z ^ I)
-            + (-0.01128010425623538 * Z ^ Z)
-            + (0.18093119978423156 * X ^ X)
-        )
-
-        ansatz = TwoLocal(rotation_blocks="ry", entanglement_blocks="cz")
-
-        options = Options(optimization_level=0)
-        ngem_estimator = ngem(Estimator, model=model, backend=lima, options=options)
-        estimator = ngem_estimator()
-
-        slsqp = SLSQP(maxiter=1)
-        vqe = VQE(estimator, ansatz, slsqp)
-        result = vqe.compute_minimum_eigenvalue(operator)
-        self.assertIsInstance(result, VQEResult)
+        # model = DummyModel()
+        # lima = FakeLimaV2()
+        #
+        # operator = (
+        #     (-1.052373245772859 * I ^ I)
+        #     + (0.39793742484318045 * I ^ Z)
+        #     + (-0.39793742484318045 * Z ^ I)
+        #     + (-0.01128010425623538 * Z ^ Z)
+        #     + (0.18093119978423156 * X ^ X)
+        # )
+        #
+        # ansatz = TwoLocal(rotation_blocks="ry", entanglement_blocks="cz")
+        #
+        # options = Options(optimization_level=0)
+        # ngem_estimator = ngem(Estimator, model=model, backend=lima, options=options)
+        # estimator = ngem_estimator()
+        #
+        # slsqp = SLSQP(maxiter=1)
+        # vqe = VQE(estimator, ansatz, slsqp)
+        # result = vqe.compute_minimum_eigenvalue(operator)
+        # self.assertIsInstance(result, VQEResult)

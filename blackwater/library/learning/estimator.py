@@ -7,8 +7,9 @@ import torch.nn
 from qiskit import QuantumCircuit, transpile
 from qiskit.opflow import PauliSumOp
 from qiskit.primitives import BaseEstimator, EstimatorResult
-from qiskit.providers import JobV1 as Job, Options, BackendV2, Backend, BackendV1
+from qiskit.providers import JobV1 as Job, Options, Backend, BackendV1
 from qiskit.quantum_info import SparsePauliOp
+from sklearn.base import BaseEstimator as ScikitBaseEstimator
 
 from blackwater.data.utils import get_backend_properties_v1, encode_pauli_sum_op
 from blackwater.exception import BlackwaterException
@@ -24,6 +25,43 @@ class LearningMethodEstimatorProcessor:
             parameter_values: Tuple[Tuple[float, ...], ...],
     ) -> np.ndarray[Any, np.dtype[np.float64]]:
         raise NotImplementedError
+
+
+class ScikitLearningModelProcessor(LearningMethodEstimatorProcessor):
+    def __init__(self,
+                 model: ScikitBaseEstimator,
+                 backend: BackendV1):
+        self._model = model
+        self._backend = backend
+        self._properties = get_backend_properties_v1(backend)
+
+    def process(
+            self,
+            expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+            circuits: Union[QuantumCircuit, List[QuantumCircuit]],
+            observables: Union[PauliSumOp, List[PauliSumOp]],
+            parameter_values: Tuple[Tuple[float, ...], ...],
+    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+
+        results = []
+        for p in observables:
+            coeff = p.coeffs
+            pauli = p.paulis
+
+            model_input, _ = encode_data(
+                circuits=[circuits],
+                properties=self._properties,
+                ideal_exp_vals=[[0.]],
+                noisy_exp_vals=[[expectation_value]],
+                num_qubits=1,
+                meas_bases=encode_pauli_sum_op(SparsePauliOp(pauli))
+            )
+
+            output = self._model.predict(model_input).item()
+
+            results.append(output * coeff[0])
+
+        return np.sum(results)
 
 
 class TorchLearningModelProcessor(LearningMethodEstimatorProcessor):
