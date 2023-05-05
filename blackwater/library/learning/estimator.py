@@ -52,7 +52,7 @@ class ScikitLearningModelProcessor(LearningMethodEstimatorProcessor):
             coeff = p.coeffs
             pauli = p.paulis
 
-            pauli_non_endian = pauli[0][::-1]
+            pauli_non_endian = pauli[0]#[::-1]
             meas_circ = QuantumCircuit(num_qubits)
             for i in range(num_qubits):
                 if str(pauli_non_endian[i]) in 'IZ':
@@ -79,10 +79,13 @@ class ScikitLearningModelProcessor(LearningMethodEstimatorProcessor):
                 ideal_exp_vals=[[0.]],
                 noisy_exp_vals=[[expectation_value]],
                 num_qubits=1,
-                meas_bases=encode_pauli_sum_op(SparsePauliOp(pauli))
+                meas_bases=encode_pauli_sum_op(SparsePauliOp('Z'*num_qubits)) #encode_pauli_sum_op(SparsePauliOp(pauli))
             )
 
             output = self._model.predict(model_input).item()
+
+            #TODO: try it outside with the same model_input and output
+            #TODO: 
 
             results.append(output * coeff[0])
 

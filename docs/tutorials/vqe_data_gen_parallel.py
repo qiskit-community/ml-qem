@@ -15,65 +15,84 @@ from tqdm import tqdm
 
 from mbd_utils import cal_all_z_exp
 
+from qiskit.primitives import BackendEstimator, Estimator
+
+# backend_noisy = AerSimulator.from_backend(backend)  # Noisy
+# run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
+# qasm_sim = QasmSimulator()
+
 backend = FakeLima()
-backend_noisy = AerSimulator.from_backend(backend)  # Noisy
-run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
-qasm_sim = QasmSimulator()
+estimator_noisy = BackendEstimator(backend)
+estimator_noisy.set_transpile_options(optimization_level=3)
+estimator_ideal = Estimator()
+num_shots = 10000
 
 NUM_QUBITS = 4
 N = 10
 
 
-def get_all_z_exp_wo_shot_noise(circuit, marginal_over=None):
-    circuit_copy = circuit.copy()
-    circuit_copy.remove_final_measurements()
-    circuit_copy.save_density_matrix()
+# def get_all_z_exp_wo_shot_noise(circuit, marginal_over=None):
+#     circuit_copy = circuit.copy()
+#     circuit_copy.remove_final_measurements()
+#     circuit_copy.save_density_matrix()
+#
+#     def int_to_bin(n, num_bits):
+#         if n < 2 ** num_bits:
+#             binary_str = bin(n)[2:]
+#             return binary_str.zfill(num_bits)
+#         else:
+#             raise ValueError
+#
+#     circuit_copy = transpile(circuit_copy, backend=backend_noisy, optimization_level=3)
+#     job = qasm_sim.run(circuit_copy)
+#     # job = execute(circuit_copy, QasmSimulator(), backend_options={'method': 'statevector'})
+#     probs = np.real(np.diag(job.result().results[0].data.density_matrix))
+#     probs = {int_to_bin(i, NUM_QUBITS): p for i, p in enumerate(probs)}
+#
+#     if marginal_over:
+#         probs = marginal_counts(probs, indices=marginal_over)
+#
+#     exp_val = 0
+#     for key, prob in probs.items():
+#         num_ones = key.count('1')
+#         exp_val += (-1) ** num_ones * prob
+#
+#     return exp_val
+def get_all_z_exp_wo_shot_noise(circuit, observable):
+    return estimator_ideal.run(circuit, observables=observable).result().values.item()
 
-    def int_to_bin(n, num_bits):
-        if n < 2 ** num_bits:
-            binary_str = bin(n)[2:]
-            return binary_str.zfill(num_bits)
-        else:
-            raise ValueError
 
-    circuit_copy = transpile(circuit_copy, backend=backend_noisy, optimization_level=3)
-    job = qasm_sim.run(circuit_copy)
-    # job = execute(circuit_copy, QasmSimulator(), backend_options={'method': 'statevector'})
-    probs = np.real(np.diag(job.result().results[0].data.density_matrix))
-    probs = {int_to_bin(i, NUM_QUBITS): p for i, p in enumerate(probs)}
-
-    if marginal_over:
-        probs = marginal_counts(probs, indices=marginal_over)
-
-    exp_val = 0
-    for key, prob in probs.items():
-        num_ones = key.count('1')
-        exp_val += (-1) ** num_ones * prob
-
-    return exp_val
+# def get_noisy_exp_vals(args):
+#     i, trans_circuit, obs = args
+#     obs = np.array(list(obs))
+#     marginal_over = np.where(obs == 'I')[0].tolist() if 'I' in obs else None
+#     job_noisy = execute(trans_circuit, **run_config_noisy)
+#     counts_noisy = job_noisy.result().get_counts()
+#     return i, cal_all_z_exp(counts_noisy, marginal_over=marginal_over)
 
 
 def get_noisy_exp_vals(args):
-    i, trans_circuit, obs = args
-    obs = np.array(list(obs))
-    marginal_over = np.where(obs == 'I')[0].tolist() if 'I' in obs else None
-    job_noisy = execute(trans_circuit, **run_config_noisy)
-    counts_noisy = job_noisy.result().get_counts()
-    return i, cal_all_z_exp(counts_noisy, marginal_over=marginal_over)
+    i, circuit, obs = args
+    return i, estimator_noisy.run(circuit, num_shots=num_shots, observables=obs).result().values.item()
+
+
+# def get_ideal_exp_vals(args):
+#     i, circuit, obs = args
+#     # print(obs)
+#     obs = np.array(list(obs))
+#     marginal_over = np.where(obs == 'I')[0].tolist() if 'I' in obs else None
+#     # print(marginal_over)
+#     return i, get_all_z_exp_wo_shot_noise(circuit, marginal_over=marginal_over)
 
 
 def get_ideal_exp_vals(args):
     i, circuit, obs = args
-    # print(obs)
-    obs = np.array(list(obs))
-    marginal_over = np.where(obs == 'I')[0].tolist() if 'I' in obs else None
-    # print(marginal_over)
-    return i, get_all_z_exp_wo_shot_noise(circuit, marginal_over=marginal_over)
+    return i, get_all_z_exp_wo_shot_noise(circuit, observable=obs)
 
 
 def transpile_circuits(args):
     i, circuit = args
-    return i, transpile(circuit, backend=backend_noisy, optimization_level=3)
+    return i, transpile(circuit, backend=backend, optimization_level=3)
 
 
 if __name__ == '__main__':
@@ -99,7 +118,7 @@ if __name__ == '__main__':
             else:
                 raise Exception
         ansatz.compose(measurement_circ, inplace=True)
-        ansatz.measure_all()
+        # ansatz.measure_all()
         for _ in range(N):
             circuits.append(ansatz.bind_parameters(np.random.uniform(-5, 5, ansatz.num_parameters)))
 
@@ -126,9 +145,9 @@ if __name__ == '__main__':
         ideal_exp_vals[i] = val
 
     ###############################################################################
-    noisy_exp_vals = np.zeros((len(trans_circuits), 1))
-    assert len(trans_circuits) == len(pauli_list_full_tiled)
-    iterable = [(i, trans_circ, obs) for i, (trans_circ, obs) in enumerate(zip(trans_circuits, pauli_list_full_tiled))]
+    noisy_exp_vals = np.zeros((len(circuits), 1))
+    assert len(circuits) == len(pauli_list_full_tiled)
+    iterable = [(i, circ, obs) for i, (circ, obs) in enumerate(zip(circuits, pauli_list_full_tiled))]
     iterable = tqdm(iterable, total=len(circuits), desc="Processing")
     with Pool() as pool:
         results = pool.map(get_noisy_exp_vals, iterable)
