@@ -7,12 +7,16 @@ import torch.nn
 from qiskit import QuantumCircuit, transpile
 from qiskit.opflow import PauliSumOp
 from qiskit.primitives import BaseEstimator, EstimatorResult
-from qiskit.providers import JobV1 as Job, Options, BackendV2, Backend, BackendV1
+from qiskit.providers import JobV1 as Job, Options, Backend, BackendV1
 from qiskit.quantum_info import SparsePauliOp
+from sklearn.base import BaseEstimator as ScikitBaseEstimator
 
 from blackwater.data.utils import get_backend_properties_v1, encode_pauli_sum_op
 from blackwater.exception import BlackwaterException
+# from .mlp import encode_data
 from mlp import encode_data
+import scipy
+from qiskit.transpiler.exceptions import TranspilerError
 
 
 class LearningMethodEstimatorProcessor:
@@ -24,6 +28,65 @@ class LearningMethodEstimatorProcessor:
             parameter_values: Tuple[Tuple[float, ...], ...],
     ) -> np.ndarray[Any, np.dtype[np.float64]]:
         raise NotImplementedError
+
+
+class ScikitLearningModelProcessor(LearningMethodEstimatorProcessor):
+    def __init__(self,
+                 model: ScikitBaseEstimator,
+                 backend: BackendV1):
+        self._model = model
+        self._backend = backend
+        self._properties = get_backend_properties_v1(backend)
+
+    def process(
+            self,
+            expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+            circuits: Union[QuantumCircuit, List[QuantumCircuit]],
+            observables: Union[PauliSumOp, List[PauliSumOp]],
+            parameter_values: Tuple[Tuple[float, ...], ...],
+    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+        num_qubits = circuits.num_qubits
+
+        results = []
+        for p in observables:
+            coeff = p.coeffs
+            pauli = p.paulis
+
+            pauli_non_endian = pauli[0][::-1]
+            meas_circ = QuantumCircuit(num_qubits)
+            for i in range(num_qubits):
+                if str(pauli_non_endian[i]) in 'IZ':
+                    pass
+                elif str(pauli_non_endian[i]) == 'X':
+                    meas_circ.h(i)
+                elif str(pauli_non_endian[i]) == 'Y':
+                    meas_circ.sdg(i)
+                    meas_circ.h(i)
+            circuits.compose(meas_circ, inplace=True)
+
+            success = False
+            while not success:
+                try:
+                    circuits = transpile(circuits, backend=self._backend, optimization_level=3)
+                    success = True
+                except (scipy.linalg.LinAlgError, TranspilerError, np.linalg.LinAlgError) as e:
+                    print(f"Ran into an error:, {e}")
+
+
+            model_input, _ = encode_data(
+                circuits=[circuits],
+                properties=self._properties,
+                ideal_exp_vals=[[0.]],
+                noisy_exp_vals=[[expectation_value]],
+                num_qubits=1,
+                meas_bases=encode_pauli_sum_op(SparsePauliOp(pauli))
+            )
+
+            output = self._model.predict(model_input).item()
+
+            results.append(output * coeff[0])
+
+        return np.sum(results)
 
 
 class TorchLearningModelProcessor(LearningMethodEstimatorProcessor):
@@ -109,7 +172,7 @@ class PostProcessedJob(Job):
                 bound_circuit = circuit.bind_parameters(params)
             else:
                 bound_circuit = transpile(
-                    circuit, self.backend(), **self._options.__dict__
+                    circuit, self.backend(), optimization_level=3, **self._options.__dict__
                 ).bind_parameters(params)
 
             mitigated_value = self._processor.process(
