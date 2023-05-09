@@ -23,12 +23,12 @@ from qiskit.primitives import BackendEstimator, Estimator
 
 backend = FakeLima()
 estimator_noisy = BackendEstimator(backend)
-estimator_noisy.set_transpile_options(optimization_level=3)
+estimator_noisy.set_transpile_options(optimization_level=0)
 estimator_ideal = Estimator()
 num_shots = 10000
 
-NUM_QUBITS = 4
-N = 10
+NUM_QUBITS = 3
+N = 5000
 
 
 # def get_all_z_exp_wo_shot_noise(circuit, marginal_over=None):
@@ -92,32 +92,34 @@ def get_ideal_exp_vals(args):
 
 def transpile_circuits(args):
     i, circuit = args
-    return i, transpile(circuit, backend=backend, optimization_level=3)
+    return i, transpile(circuit, backend=backend, optimization_level=0)
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    pauli_list_full = [''.join(s) for s in itertools.product(['X', 'Y', 'Z', 'I'], repeat=NUM_QUBITS)]
-    np.random.shuffle(pauli_list_full)
+    # pauli_list_full = [''.join(s) for s in itertools.product(['X', 'Y', 'Z', 'I'], repeat=NUM_QUBITS)]
+    # pauli_list_full.remove('I' * NUM_QUBITS)
+    # np.random.shuffle(pauli_list_full)
+    pauli_list_full = ['XXX', 'ZZZ', 'YYY']
     print(pauli_list_full)
     pauli_list_full_tiled = np.repeat(pauli_list_full, N).tolist()
     print(len(pauli_list_full_tiled))
 
     circuits = []
     for pauli in tqdm(pauli_list_full):
-        ansatz = TwoLocal(num_qubits=NUM_QUBITS, rotation_blocks='rx', entanglement_blocks='cx', reps=3)
-        measurement_circ = QuantumCircuit(NUM_QUBITS)
-        for i, p in enumerate(pauli):
-            if p in ['Z', 'I']:
-                pass
-            elif p == 'X':
-                measurement_circ.h(i)
-            elif p == 'Y':
-                measurement_circ.sdg(i)
-                measurement_circ.h(i)
-            else:
-                raise Exception
-        ansatz.compose(measurement_circ, inplace=True)
+        ansatz = TwoLocal(num_qubits=NUM_QUBITS, rotation_blocks='ry', entanglement_blocks='cz', reps=3)
+        # measurement_circ = QuantumCircuit(NUM_QUBITS)
+        # for i, p in enumerate(pauli):
+        #     if p in ['Z', 'I']:
+        #         pass
+        #     elif p == 'X':
+        #         measurement_circ.h(i)
+        #     elif p == 'Y':
+        #         measurement_circ.sdg(i)
+        #         measurement_circ.h(i)
+        #     else:
+        #         raise Exception
+        # ansatz.compose(measurement_circ, inplace=True)
         # ansatz.measure_all()
         for _ in range(N):
             circuits.append(ansatz.bind_parameters(np.random.uniform(-5, 5, ansatz.num_parameters)))
@@ -154,13 +156,11 @@ if __name__ == '__main__':
     for i, val in results:
         noisy_exp_vals[i] = val
 
-    # for ideal, noisy in zip(ideal_exp_vals, noisy_exp_vals):
-    #     print(ideal, noisy)
-
     entries = []
-    for trans_circ, ideal, noisy, obs in tqdm(zip(trans_circuits, ideal_exp_vals.tolist(), noisy_exp_vals.tolist(), pauli_list_full_tiled)):
+    for trans_circ, circ, ideal, noisy, obs in tqdm(zip(trans_circuits, circuits, ideal_exp_vals.tolist(), noisy_exp_vals.tolist(), pauli_list_full_tiled)):
         to_append = {
-            'circuit': trans_circ,
+            'trans_circuit': trans_circ,
+            'circuit': circ,
             'ideal_exp_value': ideal,
             'noisy_exp_values': noisy,
             'meas_basis': obs,
@@ -168,5 +168,5 @@ if __name__ == '__main__':
         entries.append(to_append)
     print(len(entries))
 
-    with open(f'./data/vqe/two_local_{NUM_QUBITS}q_3reps.pk', 'wb') as file:
+    with open(f'./data/vqe/two_local_{NUM_QUBITS}q_3reps_oplev0_rycz.pk', 'wb') as file:
         pickle.dump(entries, file)
