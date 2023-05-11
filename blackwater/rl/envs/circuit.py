@@ -8,13 +8,13 @@ from typing import List, SupportsFloat, Any, Dict
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
-from gymnasium.core import ActType, ObsType, RenderFrame
+from gymnasium.core import ActType, ObsType
 from matplotlib import pyplot as plt  # pylint: disable=import-error
+from numpy import integer, floating
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import get_standard_gate_name_mapping
 
 
-# pylint: disable=attr-defined,arg-type
 def _fix_qargs(qargs: List[int], num_qubits: int):
     seen_qubits: Dict[int, List[int]] = {}
     for idx, qarg in enumerate(qargs):
@@ -68,9 +68,9 @@ class QuantumCircuitBuilderEnv(gym.Env):
             {
                 "instruction_type": spaces.Discrete(len(self.instruction_set)),
                 "qubits_acts_on": spaces.Box(
-                    0, self.n_qubits - 1, shape=(3,), dtype=int
+                    0, self.n_qubits - 1, shape=(3,), dtype=integer
                 ),
-                "parameters": spaces.Box(0, 1, shape=(4,), dtype=float),
+                "parameters": spaces.Box(0, 1, shape=(4,), dtype=floating),
             }
         )
 
@@ -80,13 +80,13 @@ class QuantumCircuitBuilderEnv(gym.Env):
                     0,
                     len(self.instruction_set),
                     shape=(len(self.instruction_set), self.n_instructions),
-                    dtype=int,
+                    dtype=integer,
                 ),
                 "acting_qubits": spaces.Box(
-                    0, self.n_qubits - 1, shape=(3, self.n_instructions), dtype=int
+                    0, self.n_qubits - 1, shape=(3, self.n_instructions), dtype=integer
                 ),
                 "parameters": spaces.Box(
-                    0, 1, shape=(4, self.n_instructions), dtype=float
+                    0, 1, shape=(4, self.n_instructions), dtype=floating
                 ),
             }
         )
@@ -103,7 +103,7 @@ class QuantumCircuitBuilderEnv(gym.Env):
 
             plt.show(block=False)
 
-    def _apply_action_to_circuit(self, action: ActType) -> QuantumCircuit:
+    def _apply_action_to_circuit(self, action: dict) -> QuantumCircuit:
         """Converts action to instruction to append
 
         Args:
