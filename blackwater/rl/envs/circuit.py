@@ -14,8 +14,9 @@ from qiskit import QuantumCircuit
 from qiskit.circuit.library import get_standard_gate_name_mapping
 
 
+# pylint: disable=attr-defined,arg-type
 def _fix_qargs(qargs: List[int], num_qubits: int):
-    seen_qubits = {}
+    seen_qubits: Dict[int, List[int]] = {}
     for idx, qarg in enumerate(qargs):
         if qarg in seen_qubits:
             seen_qubits[qarg].append(idx)
@@ -90,7 +91,7 @@ class QuantumCircuitBuilderEnv(gym.Env):
             }
         )
 
-        self.reward_history = []
+        self.reward_history: List[float] = []
 
         if render_mode == "human":
             fig = plt.figure()
@@ -149,7 +150,7 @@ class QuantumCircuitBuilderEnv(gym.Env):
         self.circuit = QuantumCircuit(self.n_qubits)
         return self._get_empty_observation(), {}
 
-    def render(self) -> RenderFrame | list[RenderFrame] | None:
+    def render(self):
         if self.render_mode == "human":
             self.ax_circuit.clear()
             self.ax_histories.clear()
