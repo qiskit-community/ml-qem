@@ -238,7 +238,6 @@ def circuit_to_graph_data_json(
 
     for node in nodes:
         if isinstance(node, DAGOpNode):
-
             # qubit features
             qubit_properties: Dict[int, Dict[str, Any]] = {
                 i: {} for i in range(3)
