@@ -59,6 +59,8 @@ backend_noisy = AerSimulator.from_backend(backend)  # Noisy
 run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
 run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
 
+NUM_QUBITS = 2
+
 
 def fix_random_seed(seed=0):
     random.seed(seed)
@@ -89,7 +91,7 @@ def get_all_z_exp_wo_shot_noise(circuit, marginal_over=None):
     job = qasm_sim.run(circuit_copy)
     # job = execute(circuit_copy, QasmSimulator(), backend_options={'method': 'statevector'})
     probs = np.real(np.diag(job.result().results[0].data.density_matrix))
-    probs = {int_to_bin(i, num_bits=4): p for i, p in enumerate(probs)}
+    probs = {int_to_bin(i, num_bits=NUM_QUBITS): p for i, p in enumerate(probs)}
 
     if marginal_over:
         probs = marginal_counts(probs, indices=marginal_over)
@@ -129,10 +131,13 @@ def load_circuits(data_dir, f_ext='.json', specific_file=None):
 
 
 if __name__ == '__main__':
-    circuits, ideal_exp_vals, noisy_exp_vals, meas_bases = load_circuits('./data/vqe/', '.pk', specific_file='./data/vqe/two_local_3q_3reps_oplev0_rycz.pk')
+    import warnings
+    warnings.filterwarnings("ignore")
+
+    circuits, ideal_exp_vals, noisy_exp_vals, meas_bases = load_circuits('./data/vqe/', '.pk', specific_file='./data/vqe/two_local_2q_3reps_oplev0_rycz.pk')
     print(len(circuits))
 
-    sep = 10000
+    sep = 2999
     train_circuits, train_ideal_exp_vals, train_noisy_exp_vals, train_meas_bases = circuits[:sep], ideal_exp_vals[:sep], \
         noisy_exp_vals[:sep], meas_bases[:sep]
     test_circuits, test_ideal_exp_vals, test_noisy_exp_vals, test_meas_bases = circuits[sep:], ideal_exp_vals[sep:], \
@@ -162,7 +167,7 @@ if __name__ == '__main__':
     #################################################################################
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
-    rfr = RandomForestRegressor(n_estimators=300)
+    rfr = RandomForestRegressor(n_estimators=100)
     rfr.fit(X_train, y_train)
 
     #################################################################################
@@ -203,9 +208,9 @@ if __name__ == '__main__':
     print(f'RMSE_noisy:', np.sqrt(np.mean([df[f"dist_sq_noisy_{q}"].mean() for q in range(num_spins)])))
     print(f'RMSE_mitigated:', np.sqrt(np.mean([df[f"dist_sq_mitigated_{q}"].mean() for q in range(num_spins)])))
 
-    sns.boxplot(data=df[["dist_noisy_0", "dist_mitigated_0"]], orient="h", showfliers=False)
-    plt.title("Dist to ideal exp value")
-    plt.show()
+    # sns.boxplot(data=df[["dist_noisy_0", "dist_mitigated_0"]], orient="h", showfliers=False)
+    # plt.title("Dist to ideal exp value")
+    # plt.show()
 
     # sns.histplot([df['ideal_0'], df['noisy_0'], df["ngm_mitigated_0"]], kde=True, bins=40)
     # plt.title("Exp values distribution")
@@ -220,11 +225,11 @@ if __name__ == '__main__':
         backend=backend_noisy
     )
 
+    ##################################################################################
     str2opflow = {'I': I, 'X': X, 'Y': Y, 'Z': Z}
 
-    coefficient = [1] * 1 #[0.2, 0.4, 0.4]
-    coefficient /= np.sum(coefficient)
-    operator_components = ['XXX', 'ZZZ']
+    coefficient = [0.1, 0.3, 0.7] #[0.2, 0.4, 0.4]
+    operator_components = ['XX', 'ZZ', 'ZI']
     # num_ops_total, num_ops_from_train = 2, 2
     # coefficient = np.random.normal(0, 1, num_ops_total)
     # operator_components = np.random.choice(train_meas_bases, size=num_ops_from_train).tolist() + np.random.choice(test_meas_bases, size=num_ops_total-num_ops_from_train).tolist()
@@ -241,6 +246,7 @@ if __name__ == '__main__':
     operator = np.dot(coefficient, operator_components_opflow)
     operator = SparsePauliOp.from_operator(operator)
     print(operator)
+    #########################################################################################
 
     ##########################################################################################
     # fix_random_seed(0)
@@ -248,7 +254,7 @@ if __name__ == '__main__':
         print(f'Values: {values}', f'Params: {params}')
         lst.append(values)
     optimizer = COBYLA(maxiter=100)
-    ansatz = TwoLocal(num_qubits=3, rotation_blocks="ry", entanglement_blocks="cz", reps=3)
+    ansatz = TwoLocal(num_qubits=NUM_QUBITS, rotation_blocks="ry", entanglement_blocks="cz", reps=3)
     init_pt = np.random.uniform(-5, 5, ansatz.num_parameters)
 
     learning_estimator = learning(BackendEstimator, processor=processor, backend=FakeLima(), skip_transpile=True)
