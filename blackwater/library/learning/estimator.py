@@ -30,6 +30,63 @@ class LearningMethodEstimatorProcessor:
         raise NotImplementedError
 
 
+class ZNEProcessor(LearningMethodEstimatorProcessor):
+    def __init__(self,
+                 zne_estimator,
+                 zne_strategy,
+                 backend: BackendV1,
+                 shots=1024):
+        self._zne_estimator = zne_estimator
+        self._zne_strategy = zne_strategy
+        self._backend = backend
+        self._shots = shots
+
+    def process(
+            self,
+            expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+            circuits: Union[QuantumCircuit, List[QuantumCircuit]],
+            observables: Union[PauliSumOp, List[PauliSumOp]],
+            parameter_values: Tuple[Tuple[float, ...], ...],
+    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+
+        circuits_with_meas = circuits.copy()
+        circuits_with_meas.measure_all()
+
+        success = False
+        while not success:
+            try:
+                circuits = transpile(circuits, backend=self._backend, optimization_level=0)
+                circuits_with_meas = transpile(circuits_with_meas, backend=self._backend, optimization_level=0)
+                success = True
+            except (scipy.linalg.LinAlgError, TranspilerError, np.linalg.LinAlgError) as e:
+                print(f"Ran into an error:, {e}")
+
+        def form_all_qubit_observable(observable, measurement_qubits, total_num_qubits):
+            assert len(observable) == len(measurement_qubits)
+            converted_obs = list('I' * total_num_qubits)
+            for qubit, basis in zip(measurement_qubits, list(observable)):
+                converted_obs[qubit] = basis
+            return ''.join(converted_obs)[::-1]
+
+        def get_measurement_qubits(qc, num_measured_qubit):
+            measurement_qubits = []
+            for measurement in range(num_measured_qubit - 1, -1, -1):
+                measurement_qubits.append(qc.data[-1 - measurement][1][0].index)
+            return measurement_qubits
+
+        converted_obs = []
+        for str_pauli, coeff in observables.to_list():
+            padded_str_pauli = form_all_qubit_observable(str_pauli[::-1], get_measurement_qubits(circuits_with_meas, 2), 5)
+            converted_obs.append((padded_str_pauli, coeff))
+        converted_obsservables = SparsePauliOp.from_list(converted_obs)
+
+        job = self._zne_estimator.run(circuits, converted_obsservables, shots=self._shots, zne_strategy=self._zne_strategy)
+        values = job.result().values
+
+        return values
+
+
+
 class ScikitLearningModelProcessor(LearningMethodEstimatorProcessor):
     def __init__(self,
                  model: ScikitBaseEstimator,
@@ -86,6 +143,7 @@ class ScikitLearningModelProcessor(LearningMethodEstimatorProcessor):
             output = self._model.predict(model_input).item()
 
             results.append(output * np.real(coeff[0]))
+            # results.append(output)
 
         return np.sum(results)
 
