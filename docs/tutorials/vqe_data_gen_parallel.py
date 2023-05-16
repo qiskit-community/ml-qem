@@ -31,33 +31,6 @@ NUM_QUBITS = 3
 N = 5000
 
 
-# def get_all_z_exp_wo_shot_noise(circuit, marginal_over=None):
-#     circuit_copy = circuit.copy()
-#     circuit_copy.remove_final_measurements()
-#     circuit_copy.save_density_matrix()
-#
-#     def int_to_bin(n, num_bits):
-#         if n < 2 ** num_bits:
-#             binary_str = bin(n)[2:]
-#             return binary_str.zfill(num_bits)
-#         else:
-#             raise ValueError
-#
-#     circuit_copy = transpile(circuit_copy, backend=backend_noisy, optimization_level=3)
-#     job = qasm_sim.run(circuit_copy)
-#     # job = execute(circuit_copy, QasmSimulator(), backend_options={'method': 'statevector'})
-#     probs = np.real(np.diag(job.result().results[0].data.density_matrix))
-#     probs = {int_to_bin(i, NUM_QUBITS): p for i, p in enumerate(probs)}
-#
-#     if marginal_over:
-#         probs = marginal_counts(probs, indices=marginal_over)
-#
-#     exp_val = 0
-#     for key, prob in probs.items():
-#         num_ones = key.count('1')
-#         exp_val += (-1) ** num_ones * prob
-#
-#     return exp_val
 def get_all_z_exp_wo_shot_noise(circuit, observable):
     return estimator_ideal.run(circuit, observables=observable).result().values.item()
 
@@ -127,7 +100,7 @@ if __name__ == '__main__':
     print(len(circuits))
 
     ###############################################################################
-    # Can't do it before get_ideal_exp_vals because it appends the save_density_matrix to ALL qubits on the transpiled circuits
+    # Can't do it after get_ideal_exp_vals because it appends the save_density_matrix to ALL qubits on the transpiled circuits
     trans_circuits = [None] * len(circuits)
     iterable = [(i, circ) for i, circ in enumerate(circuits)]
     iterable = tqdm(iterable, total=len(circuits), desc="Transpiling")
