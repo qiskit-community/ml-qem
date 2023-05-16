@@ -31,7 +31,7 @@ from qiskit_aer import AerSimulator, QasmSimulator
 from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit.library import CXGate, RXGate, IGate, ZGate
-from qiskit.providers.fake_provider import FakeMontreal, FakeLima, FakeGuadalupe
+from qiskit.providers.fake_provider import FakeMontreal, FakeLima, FakeGuadalupe, FakeJakarta
 
 from blackwater.data.utils import (
     # generate_random_pauli_sum_op,
@@ -53,6 +53,7 @@ import multiprocessing
 from multiprocessing import Pool
 from functools import partial
 from noise_utils import AddNoise
+from qiskit.circuit import Barrier
 
 ############################################################
 backend = FakeGuadalupe()
@@ -133,9 +134,9 @@ def load_circuits_with_obs(data_dir, f_ext='.json'):
     return circuits, ideal_exp_vals, noisy_exp_vals, meas_basis
 
 
-def get_measurement_qubits(qc, num_qubit):
+def get_measurement_qubits(qc, num_measured_qubit):
     measurement_qubits = []
-    for measurement in range(num_qubit - 1, -1, -1):
+    for measurement in range(num_measured_qubit - 1, -1, -1):
         measurement_qubits.append(qc.data[-1 - measurement][1][0].index)
     return measurement_qubits
 
@@ -190,7 +191,7 @@ def get_zne_expval_parallel(
         circs,
         extrapolator,
         backend,
-        noise_factors=(1, 3, 5, 7),
+        noise_factors=(1, 3),
         amplifier=LocalFoldingAmplifier(gates_to_fold=2),
         shots: int = 10000,
 ) -> float:
@@ -206,19 +207,31 @@ def get_zne_expval_parallel(
     return zne_strategy, estimator, shots, circs
 
 
-def get_measurement_qubits(qc, num_measured_qubit):
-    measurement_qubits = []
-    for measurement in range(num_measured_qubit - 1, -1, -1):
-        measurement_qubits.append(qc.data[-1 - measurement][1][0].index)
-    return measurement_qubits
-
-
 def form_all_qubit_observable(observable, measurement_qubits, total_num_qubits):
     assert len(observable) == len(measurement_qubits)
     converted_obs = list('I' * total_num_qubits)
     for qubit, basis in zip(measurement_qubits, list(observable)):
         converted_obs[qubit] = basis
     return ''.join(converted_obs)[::-1]
+
+
+def remove_until_barrier(qc, obs):
+    circuit = qc.copy()
+    circuit.remove_final_measurements()
+    data = list(circuit.data)
+
+    if (set(obs) != {'Z'}) and (set(obs) != {'Z', 'I'}):
+        data.reverse()
+        for ind, instruction in enumerate(data):
+            if isinstance(instruction[0], Barrier):
+                break
+        data = data[ind:]
+        data.reverse()
+
+    new_circuit = circuit.copy()
+    new_circuit.data = data
+
+    return new_circuit
 
 
 ############################# Single Z ##########################################################
@@ -331,8 +344,9 @@ def form_all_qubit_observable(observable, measurement_qubits, total_num_qubits):
 ################################## Arbitrary Obs ##########################################
 ############################################################################################
 DATA_FOLDER = './data/ising_init_from_qasm_tomo/'
-DEGREE = 2
-SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_tomo_degree{DEGREE}.pk'
+DEGREE = 1
+SHOTS = 100000
+SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_tomo_degree{DEGREE}_shots100k.pk'
 BACKEND = backend_noisy
 
 test_circuits, test_ideal_exp_vals, test_noisy_exp_vals, obs = load_circuits_with_obs(DATA_FOLDER, '.pk')
@@ -340,15 +354,14 @@ print(len(test_circuits))
 test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
 
 extrapolator = PolynomialExtrapolator(degree=DEGREE)
-zne_strategy, estimator, shots, circs = get_zne_expval_parallel(test_circuits, extrapolator, BACKEND)
-
-for i, ob in enumerate(obs):
-    obs[i] = form_all_qubit_observable(ob, get_measurement_qubits(circs[i], 6), BACKEND.configuration().num_qubits)
+zne_strategy, estimator, _, circs = get_zne_expval_parallel(test_circuits, extrapolator, BACKEND)
 
 
 def process_circ_ob_list(args):
     i, circ, ob = args
-    job = estimator.run([circ], [SparsePauliOp(ob)], shots=shots, zne_strategy=zne_strategy)
+    padded_obs = form_all_qubit_observable(ob, get_measurement_qubits(circ, 6), BACKEND.configuration().num_qubits)
+    circ_no_meas_circ = remove_until_barrier(circ, ob)
+    job = estimator.run(circ_no_meas_circ, SparsePauliOp(padded_obs), shots=SHOTS, zne_strategy=zne_strategy)
     values = job.result().values
     return i, values
 
