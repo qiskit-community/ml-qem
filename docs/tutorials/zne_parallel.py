@@ -168,7 +168,7 @@ def get_zne_expval_parallel_single_z(
         circs,
         extrapolator,
         backend,
-        noise_factors=(1, 3, 5, 7),
+        noise_factors=(1, 3),
         amplifier=LocalFoldingAmplifier(gates_to_fold=2),
         shots: int = 10000,
 ) -> float:
@@ -196,7 +196,7 @@ def get_zne_expval_parallel(
         shots: int = 10000,
 ) -> float:
     ZNEEstimator = zne(BackendEstimator)
-    estimator = ZNEEstimator(backend=backend)
+    zne_estimator = ZNEEstimator(backend=backend)
 
     zne_strategy = ZNEStrategy(
         noise_factors=noise_factors,
@@ -204,10 +204,11 @@ def get_zne_expval_parallel(
         extrapolator=extrapolator
     )
 
-    return zne_strategy, estimator, shots, circs
+    return zne_strategy, zne_estimator, shots, circs
 
 
 def form_all_qubit_observable(observable, measurement_qubits, total_num_qubits):
+    """Input observable in non-endian, output observable in endian"""
     assert len(observable) == len(measurement_qubits)
     converted_obs = list('I' * total_num_qubits)
     for qubit, basis in zip(measurement_qubits, list(observable)):
@@ -345,8 +346,8 @@ def remove_until_barrier(qc, obs):
 ############################################################################################
 DATA_FOLDER = './data/ising_init_from_qasm_tomo/'
 DEGREE = 1
-SHOTS = 100000
-SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_tomo_degree{DEGREE}_shots100k.pk'
+SHOTS = 10000
+SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_tomo_degree{DEGREE}.pk'
 BACKEND = backend_noisy
 
 test_circuits, test_ideal_exp_vals, test_noisy_exp_vals, obs = load_circuits_with_obs(DATA_FOLDER, '.pk')
@@ -354,14 +355,14 @@ print(len(test_circuits))
 test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
 
 extrapolator = PolynomialExtrapolator(degree=DEGREE)
-zne_strategy, estimator, _, circs = get_zne_expval_parallel(test_circuits, extrapolator, BACKEND)
+zne_strategy, zne_estimator, _, circs = get_zne_expval_parallel(test_circuits, extrapolator, BACKEND)
 
 
 def process_circ_ob_list(args):
     i, circ, ob = args
     padded_obs = form_all_qubit_observable(ob, get_measurement_qubits(circ, 6), BACKEND.configuration().num_qubits)
     circ_no_meas_circ = remove_until_barrier(circ, ob)
-    job = estimator.run(circ_no_meas_circ, SparsePauliOp(padded_obs), shots=SHOTS, zne_strategy=zne_strategy)
+    job = zne_estimator.run(circ_no_meas_circ, SparsePauliOp(padded_obs), shots=SHOTS, zne_strategy=zne_strategy)
     values = job.result().values
     return i, values
 

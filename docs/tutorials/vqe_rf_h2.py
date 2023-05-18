@@ -228,9 +228,9 @@ if __name__ == '__main__':
     ZNEEstimator = zne(BackendEstimator)
     zne_estimator = ZNEEstimator(backend=backend_noisy)
     zne_strategy = ZNEStrategy(
-        noise_factors=(1, 3, 5, 7),
+        noise_factors=(1, 3),
         noise_amplifier=LocalFoldingAmplifier(gates_to_fold=2),
-        extrapolator=PolynomialExtrapolator(degree=2),
+        extrapolator=PolynomialExtrapolator(degree=1),
     )
     zne_processor = ZNEProcessor(
         zne_estimator=zne_estimator,
@@ -275,7 +275,6 @@ if __name__ == '__main__':
             lst.append(values)
         optimizer = COBYLA(maxiter=50)
         ansatz = TwoLocal(num_qubits=NUM_QUBITS, rotation_blocks="ry", entanglement_blocks="cz", reps=3)
-        # init_pt = np.random.uniform(-5, 5, ansatz.num_parameters)
         init_pt = np.ones(ansatz.num_parameters)
 
         ##########################################################################################
@@ -327,7 +326,7 @@ if __name__ == '__main__':
         diagonalization.append(min(np.real_if_close(np.linalg.eig(Operator(operator))[0])))
 
 
-    plt.plot(bond_lengths, ideal, label='ideal')
+    plt.plot(bond_lengths, diagonalization, label='ideal')
     plt.plot(bond_lengths, mitigated, label='mitigated')
     plt.plot(bond_lengths, zne, label='mitigated')
     plt.plot(bond_lengths, noisy, label='noisy')
@@ -336,7 +335,7 @@ if __name__ == '__main__':
 
     to_save = {
         'bond_lengths': bond_lengths,
-        'ideal': ideal,
+        'ideal': diagonalization,
         'mitigated': mitigated,
         'noisy': noisy,
         'zne': zne,

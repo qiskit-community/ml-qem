@@ -35,7 +35,7 @@ class ZNEProcessor(LearningMethodEstimatorProcessor):
                  zne_estimator,
                  zne_strategy,
                  backend: BackendV1,
-                 shots=1024):
+                 shots=10000):
         self._zne_estimator = zne_estimator
         self._zne_strategy = zne_strategy
         self._backend = backend
@@ -81,7 +81,7 @@ class ZNEProcessor(LearningMethodEstimatorProcessor):
         converted_obsservables = SparsePauliOp.from_list(converted_obs)
 
         job = self._zne_estimator.run(circuits, converted_obsservables, shots=self._shots, zne_strategy=self._zne_strategy)
-        values = job.result().values
+        values = job.result().values[0]
 
         return values
 
