@@ -13,9 +13,11 @@ from matplotlib import pyplot as plt  # pylint: disable=import-error
 from numpy import integer, floating
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import get_standard_gate_name_mapping
+from qiskit.quantum_info import Operator
 
 
 def _fix_qargs(qargs: List[int], num_qubits: int):
+    """Fixes arguments for qubits."""
     seen_qubits: Dict[int, List[int]] = {}
     for idx, qarg in enumerate(qargs):
         if qarg in seen_qubits:
@@ -56,13 +58,15 @@ class QuantumCircuitBuilderEnv(gym.Env):
         self.instruction_set = instruction_set or list(
             get_standard_gate_name_mapping().values()
         )
-        self.n_instructions = 10
+        self.n_instructions = env_config.get("n_instructions", 10)
 
         self.render_mode = render_mode or "human"
 
         self.circuit = QuantumCircuit(n_qubits)
+        self.observation = self._get_empty_observation()
 
         self.model = model
+        self.instructions_added = 0
 
         self.action_space = spaces.Dict(
             {
@@ -79,18 +83,19 @@ class QuantumCircuitBuilderEnv(gym.Env):
                 "instruction_types": spaces.Box(
                     0,
                     len(self.instruction_set),
-                    shape=(len(self.instruction_set), self.n_instructions),
+                    shape=(self.n_instructions, len(self.instruction_set)),
                     dtype=integer,
                 ),
                 "acting_qubits": spaces.Box(
-                    0, self.n_qubits - 1, shape=(3, self.n_instructions), dtype=integer
+                    0, self.n_qubits - 1, shape=(self.n_instructions, 3), dtype=integer
                 ),
                 "parameters": spaces.Box(
-                    0, 1, shape=(4, self.n_instructions), dtype=floating
+                    0, 1, shape=(self.n_instructions, 4), dtype=floating
                 ),
             }
         )
 
+        # vis specific
         self.reward_history: List[float] = []
 
         if render_mode == "human":
@@ -103,7 +108,13 @@ class QuantumCircuitBuilderEnv(gym.Env):
 
             plt.show(block=False)
 
-    def _apply_action_to_circuit(self, action: dict) -> QuantumCircuit:
+    def one_hot_encode_instr_type(self, instruction_type: int):
+        """Encodes instruction type into one-hot encoded vector."""
+        result = np.zeros(len(self.instruction_set))
+        result[instruction_type] = 1
+        return result
+
+    def apply_action_to_circuit(self, action: dict):
         """Converts action to instruction to append
 
         Args:
@@ -118,7 +129,7 @@ class QuantumCircuitBuilderEnv(gym.Env):
         instruction.params = params
         qargs = _fix_qargs(qargs, self.n_qubits)
         self.circuit.append(instruction, qargs)
-        return self.circuit
+        return params, qargs
 
     def step(
         self, action: ActType
@@ -134,10 +145,10 @@ class QuantumCircuitBuilderEnv(gym.Env):
         """Returns empty observation space (reset)."""
         return {
             "instruction_types": np.zeros(
-                (len(self.instruction_set), self.n_instructions)
+                (self.n_instructions, len(self.instruction_set))
             ).astype(int),
-            "acting_qubits": np.zeros((3, self.n_instructions)).astype(int),
-            "parameters": np.zeros((4, self.n_instructions)),
+            "acting_qubits": np.zeros((self.n_instructions, 3)).astype(int),
+            "parameters": np.zeros((self.n_instructions, 4)),
         }
 
     def reset(
@@ -148,7 +159,8 @@ class QuantumCircuitBuilderEnv(gym.Env):
     ) -> tuple[ObsType, dict[str, Any]]:
         super().reset(seed=seed)
         self.circuit = QuantumCircuit(self.n_qubits)
-        return self._get_empty_observation(), {}
+        self.observation = self._get_empty_observation()
+        return self.observation, {}
 
     def render(self):
         if self.render_mode == "human":
@@ -161,3 +173,64 @@ class QuantumCircuitBuilderEnv(gym.Env):
 
         elif self.render_mode == "console":
             print(self.circuit)
+
+
+class UnitarySynthesisEnv(QuantumCircuitBuilderEnv):
+    """UnitarySynthesisEnv.
+
+    Example:
+        >>> instruction_set = [
+        >>>     XGate(),
+        >>>     CXGate(),
+        >>>     HGate(),
+        >>>     U3Gate(Parameter("ϴ"), Parameter("φ"), Parameter("λ")),
+        >>> ]
+        >>> render_mode = "console"
+        >>> env_config = {
+        >>>     "operator": Operator(random_circuit(2, 3)),
+        >>>     "n_qubits": 2,
+        >>>     "model": None,
+        >>>     "instruction_set": instruction_set,
+        >>>     "n_instructions": 20,
+        >>>     "render_mode": render_mode
+        >>> }
+        >>> config = (
+        >>>     PPOConfig()
+        >>>     .environment(UnitarySynthesisEnv, env_config=env_config)
+        >>>     .framework("torch")
+        >>> )
+        >>>
+        >>> result = config.build().train()
+    """
+
+    def __init__(self, env_config: Dict[str, Any]):
+        """Constructor for env.
+
+        Args:
+            env_config: environment configuration
+        """
+        super().__init__(env_config)
+        self.target_unitary = env_config.get("operator").data
+
+    def get_reward(self) -> float:
+        """Calculates reward."""
+        circuit_unitary = Operator(self.circuit).data
+        trace = np.dot(circuit_unitary, np.linalg.inv(self.target_unitary)).trace().real
+        ideal_trace = self.n_qubits**2
+        return abs(ideal_trace - trace)
+
+    def step(
+        self, action: ActType
+    ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+        idx = self.instructions_added
+
+        self.observation["instruction_types"][idx] = self.one_hot_encode_instr_type(
+            action.get("instruction_type")  # type: ignore
+        )
+        self.observation["acting_qubits"][idx] = action["qubits_acts_on"]  # type: ignore
+        self.observation["parameters"][idx] = action["parameters"]  # type: ignore
+        self.apply_action_to_circuit(action)  # type: ignore
+
+        done = idx > self.n_instructions
+
+        return self.observation, self.get_reward(), done, False, {}
