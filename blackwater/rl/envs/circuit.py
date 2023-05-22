@@ -130,7 +130,6 @@ class QuantumCircuitBuilderEnv(gym.Env):
         self.circuit.append(instruction, qargs)
         return params, qargs
 
-
     def step(
         self, action: ActType
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
