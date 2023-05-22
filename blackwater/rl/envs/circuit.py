@@ -95,7 +95,6 @@ class QuantumCircuitBuilderEnv(gym.Env):
             }
         )
 
-        # vis specific
         self.reward_history: List[float] = []
 
         if render_mode == "human":
@@ -130,6 +129,7 @@ class QuantumCircuitBuilderEnv(gym.Env):
         qargs = _fix_qargs(qargs, self.n_qubits)
         self.circuit.append(instruction, qargs)
         return params, qargs
+
 
     def step(
         self, action: ActType
