@@ -4,3 +4,4 @@ qiskit-terra>=0.23.1
 qiskit-experiments>=0.4.0
 Gymnasium>=0.26.3
 ray>=2.4.0
+scikit-learn

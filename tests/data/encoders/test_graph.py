@@ -4,12 +4,12 @@ from unittest import TestCase
 from qiskit import QuantumCircuit, transpile
 from qiskit.providers.fake_provider import FakeLimaV2
 
-from blackwater.data.encoders.graph import (
+from blackwater.data.encoders.torch import (
     circuit_to_json_graph,
-    backend_to_json_graph,
     GraphData,
+    BackendNodeEncoder,
+    backend_to_json_graph,
 )
-from blackwater.data.encoders.node_encoder import BackendNodeEncoder
 
 
 def create_bell_circuit(

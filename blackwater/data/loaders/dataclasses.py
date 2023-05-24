@@ -5,8 +5,7 @@ from torch_geometric import transforms as pyg_transforms
 from torch_geometric.data import Dataset
 from torch_geometric.transforms import BaseTransform
 
-from blackwater.data.dataclasses import ExpValData
-from blackwater.data.io.io import ExpValDataReader
+from blackwater.data.dataio import ExpValDataReader
 
 
 class ExpValDataSet(Dataset):
@@ -34,9 +33,9 @@ class ExpValDataSet(Dataset):
         reader = ExpValDataReader()
 
         for file_path in paths:
-            data: List[ExpValData] = reader.read_from_file(file_path)  # type: ignore[assignment]
+            data = reader.read_from_file(file_path)
             for entry in data:
-                entry = entry.to_pyg()
+                entry = entry.to_pyg()  # type: ignore
                 for transform in transforms:
                     entry = transform(entry)
                 self.entries.append(entry)
