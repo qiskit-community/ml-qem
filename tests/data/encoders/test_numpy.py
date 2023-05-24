@@ -21,4 +21,4 @@ class TestNumpyEncoders(TestCase):
 
         result = encoder.encode(circuit=circuit, operator=operator)
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, (31,))
+        self.assertEqual(result.shape, (32,))
