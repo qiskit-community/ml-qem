@@ -1,6 +1,6 @@
 # Blackwater
 
-![logo](./docs/images/blackwater_logo.png)
+![logo](./docs/images/logo.gif)
 
 Package for solving quantum computing problems using machine learning.
 

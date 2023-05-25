@@ -9,8 +9,8 @@ from qiskit.providers.fake_provider import FakeLimaV2
 from qiskit.quantum_info import SparsePauliOp
 from torch_geometric.data import Data
 
-from blackwater.data.dataclasses import ExpValData
-from blackwater.data.io.io import ExpValDataWriter
+from blackwater.data.dataio import ExpValDataWriter
+from blackwater.data.encoders.torch import ExpValData
 from blackwater.data.loaders.dataclasses import ExpValDataSet
 from tests.data.encoders.test_graph import create_bell_circuit
 
