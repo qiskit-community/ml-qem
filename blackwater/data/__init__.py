@@ -47,7 +47,7 @@ from .encoders.torch import (
     circuit_to_json_graph,
     backend_to_json_graph,
     PygData,
-    ExpValData
+    ExpValData,
 )
 from .encoders.utils import (
     encode_pauli_sum_operator,
