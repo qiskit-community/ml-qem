@@ -1,8 +1,14 @@
+.. module:: blackwater
+
 =========================
 BlackWater API References
 =========================
 
-.. automodule:: blackwater
-   :no-members:
-   :no-inherited-members:
-   :no-special-members:
+.. toctree::
+   :maxdepth: 1
+
+   primitives
+   data
+   metrics
+   library
+   rl

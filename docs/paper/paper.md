@@ -1,5 +1,5 @@
 ---
-title: 'BlackWater: library for solving quantum computing problems using machine learning'
+title: 'BlackWater: library.rst for solving quantum computing problems using machine learning'
 tags:
   - quantum computing
   - qiskit

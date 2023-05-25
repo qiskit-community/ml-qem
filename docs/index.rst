@@ -4,6 +4,8 @@ BlackWater
 
 BlackWater: Library for solving quantum computing problems using machine learning
 
+.. image:: /images/logo.gif
+
 The source code to the project is available `on GitHub <https://github.com/IceKhan13/blackwater>`_.
 
 ------------
