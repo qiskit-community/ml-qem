@@ -17,3 +17,11 @@ black[jupyter]~=22.1
 qiskit-terra>=0.21.1
 sphinx-copybutton>=0.5.0
 qiskit-ibm-runtime==0.9.3
+torch>=2.0.1
+qiskit-aer>=0.11.0
+qiskit-terra>=0.23.1
+qiskit-experiments>=0.4.0
+Gymnasium>=0.26.3
+ray>=2.4.0
+scikit-learn
+
