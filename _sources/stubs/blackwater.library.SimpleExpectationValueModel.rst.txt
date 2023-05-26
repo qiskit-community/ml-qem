@@ -1,0 +1,76 @@
+﻿blackwater.library.SimpleExpectationValueModel
+==============================================
+
+.. currentmodule:: blackwater.library
+
+.. autoclass:: SimpleExpectationValueModel
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SimpleExpectationValueModel.__init__
+      ~SimpleExpectationValueModel.add_module
+      ~SimpleExpectationValueModel.apply
+      ~SimpleExpectationValueModel.bfloat16
+      ~SimpleExpectationValueModel.buffers
+      ~SimpleExpectationValueModel.children
+      ~SimpleExpectationValueModel.cpu
+      ~SimpleExpectationValueModel.cuda
+      ~SimpleExpectationValueModel.double
+      ~SimpleExpectationValueModel.eval
+      ~SimpleExpectationValueModel.extra_repr
+      ~SimpleExpectationValueModel.float
+      ~SimpleExpectationValueModel.forward
+      ~SimpleExpectationValueModel.get_buffer
+      ~SimpleExpectationValueModel.get_extra_state
+      ~SimpleExpectationValueModel.get_parameter
+      ~SimpleExpectationValueModel.get_submodule
+      ~SimpleExpectationValueModel.half
+      ~SimpleExpectationValueModel.ipu
+      ~SimpleExpectationValueModel.load_state_dict
+      ~SimpleExpectationValueModel.modules
+      ~SimpleExpectationValueModel.named_buffers
+      ~SimpleExpectationValueModel.named_children
+      ~SimpleExpectationValueModel.named_modules
+      ~SimpleExpectationValueModel.named_parameters
+      ~SimpleExpectationValueModel.parameters
+      ~SimpleExpectationValueModel.register_backward_hook
+      ~SimpleExpectationValueModel.register_buffer
+      ~SimpleExpectationValueModel.register_forward_hook
+      ~SimpleExpectationValueModel.register_forward_pre_hook
+      ~SimpleExpectationValueModel.register_full_backward_hook
+      ~SimpleExpectationValueModel.register_full_backward_pre_hook
+      ~SimpleExpectationValueModel.register_load_state_dict_post_hook
+      ~SimpleExpectationValueModel.register_module
+      ~SimpleExpectationValueModel.register_parameter
+      ~SimpleExpectationValueModel.register_state_dict_pre_hook
+      ~SimpleExpectationValueModel.requires_grad_
+      ~SimpleExpectationValueModel.set_extra_state
+      ~SimpleExpectationValueModel.share_memory
+      ~SimpleExpectationValueModel.state_dict
+      ~SimpleExpectationValueModel.to
+      ~SimpleExpectationValueModel.to_empty
+      ~SimpleExpectationValueModel.train
+      ~SimpleExpectationValueModel.type
+      ~SimpleExpectationValueModel.xpu
+      ~SimpleExpectationValueModel.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SimpleExpectationValueModel.T_destination
+      ~SimpleExpectationValueModel.call_super_init
+      ~SimpleExpectationValueModel.dump_patches
+      ~SimpleExpectationValueModel.training
+   
+   

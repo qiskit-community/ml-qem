@@ -1,0 +1,36 @@
+﻿blackwater.data.ExpValData
+==========================
+
+.. currentmodule:: blackwater.data
+
+.. autoclass:: ExpValData
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ExpValData.__init__
+      ~ExpValData.build
+      ~ExpValData.deserialize
+      ~ExpValData.serialize
+      ~ExpValData.to_pyg
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ExpValData.backend
+      ~ExpValData.observable
+      ~ExpValData.circuit
+      ~ExpValData.circuit_depth
+      ~ExpValData.expectation_values
+   
+   

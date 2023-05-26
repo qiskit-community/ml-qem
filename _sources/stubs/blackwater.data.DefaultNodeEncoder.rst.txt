@@ -1,0 +1,23 @@
+﻿blackwater.data.DefaultNodeEncoder
+==================================
+
+.. currentmodule:: blackwater.data
+
+.. autoclass:: DefaultNodeEncoder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DefaultNodeEncoder.__init__
+      ~DefaultNodeEncoder.encode
+   
+   
+
+   
+   
+   

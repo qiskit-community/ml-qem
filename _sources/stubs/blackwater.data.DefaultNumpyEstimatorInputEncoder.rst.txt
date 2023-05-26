@@ -1,0 +1,23 @@
+﻿blackwater.data.DefaultNumpyEstimatorInputEncoder
+=================================================
+
+.. currentmodule:: blackwater.data
+
+.. autoclass:: DefaultNumpyEstimatorInputEncoder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DefaultNumpyEstimatorInputEncoder.__init__
+      ~DefaultNumpyEstimatorInputEncoder.encode
+   
+   
+
+   
+   
+   

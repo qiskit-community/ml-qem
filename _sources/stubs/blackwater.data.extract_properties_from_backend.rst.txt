@@ -1,0 +1,6 @@
+﻿blackwater.data.extract\_properties\_from\_backend
+==================================================
+
+.. currentmodule:: blackwater.data
+
+.. autofunction:: extract_properties_from_backend

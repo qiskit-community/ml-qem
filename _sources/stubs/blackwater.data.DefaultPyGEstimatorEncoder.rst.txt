@@ -1,0 +1,23 @@
+﻿blackwater.data.DefaultPyGEstimatorEncoder
+==========================================
+
+.. currentmodule:: blackwater.data
+
+.. autoclass:: DefaultPyGEstimatorEncoder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DefaultPyGEstimatorEncoder.__init__
+      ~DefaultPyGEstimatorEncoder.encode
+   
+   
+
+   
+   
+   

@@ -1,0 +1,24 @@
+﻿blackwater.primitives.BlackWaterEstimatorModel
+==============================================
+
+.. currentmodule:: blackwater.primitives
+
+.. autoclass:: BlackWaterEstimatorModel
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BlackWaterEstimatorModel.__init__
+      ~BlackWaterEstimatorModel.predict
+      ~BlackWaterEstimatorModel.run
+   
+   
+
+   
+   
+   

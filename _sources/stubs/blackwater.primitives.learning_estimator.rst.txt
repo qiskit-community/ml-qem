@@ -1,0 +1,6 @@
+﻿blackwater.primitives.learning\_estimator
+=========================================
+
+.. currentmodule:: blackwater.primitives
+
+.. autofunction:: learning_estimator
