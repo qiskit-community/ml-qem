@@ -9,11 +9,11 @@ from qiskit.circuit.random import random_circuit
 from qiskit.providers import BackendV1
 from torch_geometric.data import Data
 
-from blackwater.data.utils import (
+from blackwater.data.encoders.utils import (
+    get_backend_properties_v1,
+    circuit_to_graph_data_json,
     generate_random_pauli_sum_op,
     create_estimator_meas_data,
-    circuit_to_graph_data_json,
-    get_backend_properties_v1,
     encode_pauli_sum_op,
 )
 

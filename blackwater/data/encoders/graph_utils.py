@@ -1,6 +1,5 @@
 """Graph encoders."""
 
-from abc import ABC
 from dataclasses import dataclass, asdict
 from typing import Union, List, Dict, Optional, Tuple
 
@@ -16,7 +15,7 @@ from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.transpiler import Target
 from torch_geometric.data import Data
 
-from blackwater.data.core import DataEncoder, BlackwaterData
+from blackwater.data.core import DataEncoder, BlackwaterData, NodeEncoder
 from blackwater.data.encoders.utils import OperatorData, encode_operator
 from blackwater.exception import BlackwaterException
 
@@ -24,15 +23,7 @@ N_QUBIT_PROPERTIES = 2
 ALL_INSTRUCTIONS = list(get_standard_gate_name_mapping().keys())
 
 
-# pylint: disable=no-member
-class NodeEncoder(ABC):
-    """Base class for circuit dag node encoder."""
-
-    def encode(self, node: DAGNode) -> List[float]:
-        """Encodes node of circuit dag."""
-        raise NotImplementedError
-
-
+# pylint: disable=no-member, arguments-differ
 class DefaultNodeEncoder(NodeEncoder):
     """DefaultNodeEncoder."""
 
@@ -58,7 +49,7 @@ class DefaultNodeEncoder(NodeEncoder):
             for idx, inst in enumerate(available_instructions)
         }
 
-    def encode(self, node: DAGNode) -> List[float]:
+    def encode(self, node: DAGNode, **kwargs) -> List[float]:  # type: ignore
         if isinstance(node, DAGOpNode):
             params_encoding = [0.0, 0.0, 0.0]
             for i, param in enumerate(node.op.params):
@@ -144,7 +135,7 @@ class BackendNodeEncoder(NodeEncoder):
         self.num_qubits = backend.num_qubits
         self.properties: BackendProperties = extract_properties_from_backend(backend)
 
-    def encode(self, node: DAGNode) -> List[float]:
+    def encode(self, node: DAGNode, **kwargs) -> List[float]:  # type: ignore
         if isinstance(node, DAGOpNode):
             params_encoding = [0.0, 0.0, 0.0]
             for i, param in enumerate(node.op.params):
@@ -380,19 +371,18 @@ class DefaultPyGEstimatorEncoder(DataEncoder):
     """Default encoder for pyg data.
     Converts circuit data into torch_geometric.Data"""
 
-    def encode(self, **kwargs) -> Tuple[Data, float]:
-        circuit: QuantumCircuit = kwargs.get("circuit")
-        operator: PauliSumOp = kwargs.get("operator")
-        exp_value = kwargs.get("exp_val")
-        backend = kwargs.get("backend")
-
-        if circuit is None or operator is None or exp_value is None or backend is None:
-            raise BlackwaterException("Missing encoder input.")
-
+    def encode(  # type: ignore
+        self,
+        circuit: QuantumCircuit,
+        operator: PauliSumOp,
+        exp_val: float,
+        backend: BackendV2,
+        **kwargs,
+    ) -> Tuple[Data, float]:
         data = ExpValData.build(
             circuit=circuit,
-            expectation_values=[exp_value],
+            expectation_values=[exp_val],
             observable=operator,
             backend=backend,
         ).to_pyg()
-        return data, exp_value
+        return data, exp_val
