@@ -22,7 +22,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="blackwater.data.ExpValDataSet" href="../stubs/blackwater.data.ExpValDataSet.html" />
+    <link rel="next" title="blackwater.data.DefaultCircuitEncoder" href="../stubs/blackwater.data.DefaultCircuitEncoder.html" />
     <link rel="prev" title="blackwater.primitives.TorchGeometricEstimatorModel" href="../stubs/blackwater.primitives.TorchGeometricEstimatorModel.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -42,61 +42,45 @@
             
   <span class="target" id="module-blackwater.data"><span id="blackwater-data"></span></span><section id="data-blackwater-data">
 <h1>Data (<a class="reference internal" href="#module-blackwater.data" title="blackwater.data"><code class="xref py py-mod docutils literal notranslate"><span class="pre">blackwater.data</span></code></a>)<a class="headerlink" href="#data-blackwater-data" title="Permalink to this heading">¶</a></h1>
-<section id="classes">
-<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this heading">¶</a></h2>
+<section id="circuit-encoders">
+<h2>Circuit encoders<a class="headerlink" href="#circuit-encoders" title="Permalink to this heading">¶</a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.ExpValDataSet.html#blackwater.data.ExpValDataSet" title="blackwater.data.ExpValDataSet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExpValDataSet</span></code></a>(path[, transforms])</p></td>
-<td><p>ExpValDataLoader.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultCircuitEncoder.html#blackwater.data.DefaultCircuitEncoder" title="blackwater.data.DefaultCircuitEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultCircuitEncoder</span></code></a>()</p></td>
+<td><p>Default circuit encoder to transform circuit into numpy array for training</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.CircuitGraphExpValMitigationDataset.html#blackwater.data.CircuitGraphExpValMitigationDataset" title="blackwater.data.CircuitGraphExpValMitigationDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CircuitGraphExpValMitigationDataset</span></code></a>(path[, ...])</p></td>
-<td><p>CircuitGraphMitigationDataset.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultNumpyEstimatorInputEncoder.html#blackwater.data.DefaultNumpyEstimatorInputEncoder" title="blackwater.data.DefaultNumpyEstimatorInputEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultNumpyEstimatorInputEncoder</span></code></a>()</p></td>
-<td><p>Standard encoder for learning estimator that transforms circuit and observables into numpy array.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.NodeEncoder.html#blackwater.data.NodeEncoder" title="blackwater.data.NodeEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NodeEncoder</span></code></a>()</p></td>
-<td><p>Base class for circuit dag node encoder.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultNodeEncoder.html#blackwater.data.DefaultNodeEncoder" title="blackwater.data.DefaultNodeEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultNodeEncoder</span></code></a>([available_instructions])</p></td>
-<td><p>DefaultNodeEncoder.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.BackendNodeEncoder.html#blackwater.data.BackendNodeEncoder" title="blackwater.data.BackendNodeEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BackendNodeEncoder</span></code></a>(backend)</p></td>
-<td><p>BackendNodeEncoder.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultPyGEstimatorEncoder.html#blackwater.data.DefaultPyGEstimatorEncoder" title="blackwater.data.DefaultPyGEstimatorEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultPyGEstimatorEncoder</span></code></a>()</p></td>
-<td><p>Default encoder for pyg data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.PygData.html#blackwater.data.PygData" title="blackwater.data.PygData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PygData</span></code></a>()</p></td>
-<td><p>PygData.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.ExpValData.html#blackwater.data.ExpValData" title="blackwater.data.ExpValData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExpValData</span></code></a>(circuit, circuit_depth, ...[, ...])</p></td>
-<td><p>ExpValData.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultPyGCircuitEncoder.html#blackwater.data.DefaultPyGCircuitEncoder" title="blackwater.data.DefaultPyGCircuitEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultPyGCircuitEncoder</span></code></a>(backend)</p></td>
+<td><p>Default pytorch geometric circuit encoder.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h2>
+<section id="operator-encoders">
+<h2>Operator encoders<a class="headerlink" href="#operator-encoders" title="Permalink to this heading">¶</a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.extract_properties_from_backend.html#blackwater.data.extract_properties_from_backend" title="blackwater.data.extract_properties_from_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_properties_from_backend</span></code></a>(backend)</p></td>
-<td><p>Returns backend properties.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultOperatorEncoder.html#blackwater.data.DefaultOperatorEncoder" title="blackwater.data.DefaultOperatorEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultOperatorEncoder</span></code></a>()</p></td>
+<td><p>Default operator encoder to turn operator class into numpy array.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.circuit_to_json_graph.html#blackwater.data.circuit_to_json_graph" title="blackwater.data.circuit_to_json_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">circuit_to_json_graph</span></code></a>(circuit[, ...])</p></td>
-<td><p>Encodes circuit to json graph data</p></td>
+</tbody>
+</table>
+</section>
+<section id="backend-encoders">
+<h2>Backend encoders<a class="headerlink" href="#backend-encoders" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultPyGBackendEncoder.html#blackwater.data.DefaultPyGBackendEncoder" title="blackwater.data.DefaultPyGBackendEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultPyGBackendEncoder</span></code></a>()</p></td>
+<td><p>Default pytorch geometric backend encoder.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.backend_to_json_graph.html#blackwater.data.backend_to_json_graph" title="blackwater.data.backend_to_json_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">backend_to_json_graph</span></code></a>(backend)</p></td>
-<td><p>Encodes backend to json graph data</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.encode_pauli_sum_operator.html#blackwater.data.encode_pauli_sum_operator" title="blackwater.data.encode_pauli_sum_operator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">encode_pauli_sum_operator</span></code></a>(operator)</p></td>
-<td><p>Encodes PauliSumOp</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.encode_operator.html#blackwater.data.encode_operator" title="blackwater.data.encode_operator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">encode_operator</span></code></a>(operator)</p></td>
-<td><p>Encodes BaseOperator</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/blackwater.data.encode_sparse_pauli_operatpr.html#blackwater.data.encode_sparse_pauli_operatpr" title="blackwater.data.encode_sparse_pauli_operatpr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">encode_sparse_pauli_operatpr</span></code></a>(operator)</p></td>
-<td><p>Encodes SparsePauliOp</p></td>
+</tbody>
+</table>
+</section>
+<section id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/blackwater.data.DefaultNumpyEstimatorInputEncoder.html#blackwater.data.DefaultNumpyEstimatorInputEncoder" title="blackwater.data.DefaultNumpyEstimatorInputEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultNumpyEstimatorInputEncoder</span></code></a>()</p></td>
+<td><p>Standard encoder for learning estimator that transforms circuit and observables into numpy array.</p></td>
 </tr>
 </tbody>
 </table>
@@ -144,7 +128,7 @@
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">BlackWater API References</a><ul>
       <li>Previous: <a href="../stubs/blackwater.primitives.TorchGeometricEstimatorModel.html" title="previous chapter">blackwater.primitives.TorchGeometricEstimatorModel</a></li>
-      <li>Next: <a href="../stubs/blackwater.data.ExpValDataSet.html" title="next chapter">blackwater.data.ExpValDataSet</a></li>
+      <li>Next: <a href="../stubs/blackwater.data.DefaultCircuitEncoder.html" title="next chapter">blackwater.data.DefaultCircuitEncoder</a></li>
   </ul></li>
   </ul></li>
 </ul>

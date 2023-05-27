@@ -1,6 +1,0 @@
-﻿blackwater.data.encode\_operator
-================================
-
-.. currentmodule:: blackwater.data
-
-.. autofunction:: encode_operator

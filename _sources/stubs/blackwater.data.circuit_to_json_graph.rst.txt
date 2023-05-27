@@ -1,6 +1,0 @@
-﻿blackwater.data.circuit\_to\_json\_graph
-========================================
-
-.. currentmodule:: blackwater.data
-
-.. autofunction:: circuit_to_json_graph

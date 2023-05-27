@@ -1,6 +1,0 @@
-﻿blackwater.data.encode\_pauli\_sum\_operator
-============================================
-
-.. currentmodule:: blackwater.data
-
-.. autofunction:: encode_pauli_sum_operator

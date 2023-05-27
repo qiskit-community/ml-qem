@@ -1,6 +1,0 @@
-﻿blackwater.data.encode\_sparse\_pauli\_operatpr
-===============================================
-
-.. currentmodule:: blackwater.data
-
-.. autofunction:: encode_sparse_pauli_operatpr
