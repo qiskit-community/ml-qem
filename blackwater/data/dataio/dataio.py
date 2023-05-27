@@ -4,7 +4,7 @@ import json
 from typing import List
 
 from blackwater.data.core import BlackwaterData
-from blackwater.data.encoders.torch import ExpValData
+from blackwater.data.encoders.graph_utils import ExpValData
 
 
 # pylint: disable=unspecified-encoding

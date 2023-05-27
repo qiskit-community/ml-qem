@@ -5,52 +5,45 @@ Data (:mod:`blackwater.data`)
 
 .. currentmodule:: blackwater.data
 
-Classes
-=======
+Circuit encoders
+================
 
 .. autosummary::
    :toctree: ../stubs/
 
-   ExpValDataSet
-   CircuitGraphExpValMitigationDataset
-   DefaultNumpyEstimatorInputEncoder
-   NodeEncoder
-   DefaultNodeEncoder
-   BackendNodeEncoder
-   DefaultPyGEstimatorEncoder
-   PygData
-   ExpValData
+   DefaultCircuitEncoder
+   DefaultPyGCircuitEncoder
 
-Functions
+Operator encoders
+=================
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   DefaultOperatorEncoder
+
+Backend encoders
+================
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   DefaultPyGBackendEncoder
+
+Utilities
 =========
 
 .. autosummary::
    :toctree: ../stubs/
 
-   extract_properties_from_backend
-   circuit_to_json_graph
-   backend_to_json_graph
-   encode_pauli_sum_operator
-   encode_operator
-   encode_sparse_pauli_operatpr
+   DefaultNumpyEstimatorInputEncoder
 """
 
-from .loaders.dataclasses import ExpValDataSet
-from .loaders.exp_val import CircuitGraphExpValMitigationDataset
-from .encoders.numpy import DefaultNumpyEstimatorInputEncoder
-from .encoders.torch import (
-    NodeEncoder,
+from .encoders.primtives_utils import DefaultNumpyEstimatorInputEncoder
+from .encoders.backend import DefaultPyGBackendEncoder
+from .encoders.operator import DefaultOperatorEncoder
+from .encoders.circuit import (
     DefaultNodeEncoder,
-    BackendNodeEncoder,
-    DefaultPyGEstimatorEncoder,
-    extract_properties_from_backend,
-    circuit_to_json_graph,
-    backend_to_json_graph,
-    PygData,
-    ExpValData,
-)
-from .encoders.utils import (
-    encode_pauli_sum_operator,
-    encode_operator,
-    encode_sparse_pauli_operatpr,
+    DefaultCircuitEncoder,
+    DefaultPyGCircuitEncoder,
 )

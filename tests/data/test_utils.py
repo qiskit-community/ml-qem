@@ -4,7 +4,7 @@ from unittest import TestCase
 from qiskit import QuantumCircuit
 from torch_geometric.data import Data
 
-from blackwater.data.utils import circuit_to_pyg_data
+from blackwater.data.encoders.utils import circuit_to_pyg_data
 
 
 class TestDataUtils(TestCase):

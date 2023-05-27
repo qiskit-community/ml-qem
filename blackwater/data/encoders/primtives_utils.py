@@ -5,7 +5,8 @@ from qiskit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
 
 from blackwater.data.core import DataEncoder
-from blackwater.data.encoders.utils import encode_operator
+from blackwater.data.encoders.circuit import DefaultCircuitEncoder
+from blackwater.data.encoders.operator import DefaultOperatorEncoder
 
 
 class DefaultNumpyEstimatorInputEncoder(DataEncoder):
@@ -33,29 +34,7 @@ class DefaultNumpyEstimatorInputEncoder(DataEncoder):
         operator: PauliSumOp = kwargs.get("operator")
         exp_value = kwargs.get("exp_val")
 
-        depth = circuit.depth()
-        two_qubit_depth = circuit.depth(lambda x: x[0].num_qubits == 2)
+        circuit_encoding = DefaultCircuitEncoder().encode(circuit)
+        operator_encoding = DefaultOperatorEncoder().encode(operator)
 
-        num_one_q_gates = 0
-        num_two_q_gates = 0
-        for instr in circuit._data:
-            num_qubits = len(instr.qubits)
-            if num_qubits == 1:
-                num_one_q_gates += 1
-            if num_qubits == 2:
-                num_two_q_gates += 1
-
-        circuit_encoding = [
-            depth,
-            two_qubit_depth,
-            num_one_q_gates,
-            num_two_q_gates,
-            circuit.num_qubits,
-        ]
-
-        operator_encoding = []
-        for entry in encode_operator(operator).operator:
-            operator_encoding += entry
-
-        data_encoding = [exp_value] + circuit_encoding + operator_encoding
-        return np.array(data_encoding)
+        return np.concatenate([[exp_value], circuit_encoding, operator_encoding])
