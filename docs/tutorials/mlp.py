@@ -156,7 +156,7 @@ def encode_data_v2_ecr(circuits, ideal_exp_vals, noisy_exp_vals, obs_size, meas_
 
     vec = []
 
-    bin_size = 0.05 * np.pi
+    bin_size = 0.025 * np.pi
     num_angle_bins = int(np.ceil(4 * np.pi / bin_size))
 
     X = torch.zeros([len(circuits), len(vec) + len(gates_set) + num_angle_bins + obs_size + len(meas_bases[0])])
