@@ -27,6 +27,30 @@ def fix_random_seed(seed=0):
     print(f'random seed fixed to {seed}')
 
 
+class RemoveReadoutErrors:
+    def __init__(self, backend=FakeLima(), simulator=AerSimulator):
+        self.backend = backend
+        self.simulator = simulator
+        self.num_qubits = self.backend.configuration().n_qubits
+
+    def remove_readout_errors(self) -> NoiseModel:
+        noise_model = NoiseModel.from_backend(self.backend)
+        noise_dict = noise_model.to_dict()['errors']
+
+        ind_to_del = []
+        for i in range(len(noise_dict)):
+            if noise_dict[i]['operations'] == ['measure']:
+                ind_to_del += [i]
+
+        for i in sorted(ind_to_del, reverse=True):
+            del noise_dict[i]
+
+        new_noise_model = NoiseModel.from_dict({'errors': noise_dict})
+        modified_backend = self.simulator.from_backend(self.backend, noise_model=new_noise_model)
+
+        return modified_backend, new_noise_model
+
+
 class AddNoise:
     def __init__(self, backend=FakeLima(), simulator=AerSimulator):
         self.uniform = None
