@@ -52,22 +52,17 @@ import seaborn as sns
 import multiprocessing
 from multiprocessing import Pool
 from functools import partial
-from noise_utils import AddNoise
+from noise_utils import AddNoise, RemoveReadoutErrors
 from qiskit.circuit import Barrier
 
-############################################################
-backend = FakeGuadalupe()
-properties = get_backend_properties_v1(backend)
-
-## Local
-backend_ideal = QasmSimulator()  # Noiseless
-backend_noisy = AerSimulator.from_backend(backend)  # Noisy
-
-run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
-run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
-
-
-###########################################################
+# ############################################################
+# backend = FakeGuadalupe()
+# properties = get_backend_properties_v1(backend)
+#
+# ## Local
+# backend_ideal = QasmSimulator()  # Noiseless
+# backend_noisy = AerSimulator.from_backend(backend)  # Noisy
+# ###########################################################
 
 ############################################################
 # backend = FakeLima()
@@ -76,9 +71,15 @@ run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
 # # Local, coherent noise
 # backend_ideal = QasmSimulator() # Noiseless
 # backend_noisy_coherent, noise_model = AddNoise(backend=backend).add_coherent_noise(seed=0, theta=np.pi * 0.04, uniform=False, add_depolarization=True)
-#
-# run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
-# run_config_noisy_coherent = {'shots': 10000, 'backend': backend_noisy_coherent, 'name': 'noisy_coherent'}
+############################################################
+
+############################################################
+backend = FakeLima()
+properties = get_backend_properties_v1(backend)
+
+# Local, coherent noise
+backend_ideal = QasmSimulator() # Noiseless
+backend_noisy_no_readout = RemoveReadoutErrors().remove_readout_errors()[0]
 ############################################################
 
 
@@ -191,7 +192,7 @@ def get_zne_expval_parallel(
         circs,
         extrapolator,
         backend,
-        noise_factors=(1, 3),
+        noise_factors=(1, 3, 5, 7),
         amplifier=LocalFoldingAmplifier(gates_to_fold=2),
         shots: int = 10000,
 ) -> float:
@@ -235,142 +236,35 @@ def remove_until_barrier(qc, obs):
     return new_circuit
 
 
-############################# Single Z ##########################################################
-########################################################################################################################
-# # DATA_FOLDER = './data/haoran_mbd/random_circuits/val/'
-# # SAVE_PATH = './zne_mitigated/random_circuits.pk'
-# DATA_FOLDER = './data/ising_init_from_qasm_coherent/val_extra/'
-# DEGREE = 2
-# SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_coherent_extra_degree{DEGREE}.pk'
-# BACKEND = backend_noisy_coherent
-#
-# test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_circuits(DATA_FOLDER, '.pk')
-# print(len(test_circuits))
-# test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
-#
-# extrapolator = PolynomialExtrapolator(degree=DEGREE)
-# zne_strategy, estimator, ob_list_all, shots, circs = get_zne_expval_parallel_single_z(test_circuits, extrapolator,
-#                                                                                       BACKEND)
+############################ Single Z ##########################################################
+#######################################################################################################################
+# DATA_FOLDER = './data/haoran_mbd/random_circuits/val/'
+# SAVE_PATH = './zne_mitigated/random_circuits.pk'
+DATA_FOLDER = './data/ising_init_from_qasm_no_readout/val_extra/'
+DEGREE = 2
+SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_no_readout_extra_degree{DEGREE}.pk'
+BACKEND = backend_noisy_no_readout
 
-# def process_circ_ob_list(args):
-#     i, circ, ob_list = args
-#     ob_list = list(map(SparsePauliOp, ob_list))
-#     job = estimator.run([circ] * 4, ob_list, shots=shots, zne_strategy=zne_strategy)
-#     values = job.result().values
-#     return i, values
-#
-#
-# if __name__ == '__main__':
-#     ###############################################################################
-#     mitigated = np.zeros((len(circs), 4))
-#     iterable = [(i, circ, ob_list) for i, (circ, ob_list) in enumerate(zip(circs, ob_list_all))]
-#     iterable = tqdm(iterable, total=len(circs), desc="Processing", ncols=80)
-#     with Pool() as pool:
-#         results = pool.map(process_circ_ob_list, iterable)
-#
-#     for i, values in results:
-#         mitigated[i] = values
-#
-#     mitigated *= -1
-#     print(mitigated)
-#
-#     with open(SAVE_PATH, 'wb') as file:
-#         pickle.dump(mitigated, file)
-#     ###############################################################################
-#
-#     ###############################################################################
-#     # with open(SAVE_PATH, 'wb') as file:
-#     #     mitigated = pickle.load(file)
-#     ###############################################################################
-#
-#     ###############################################################################
-#     fix_random_seed(0)
-#     distances = []
-#
-#     num_spins = 4
-#     even_qubits = np.linspace(0, num_spins, int(num_spins / 2), endpoint=False)
-#     odd_qubits = np.linspace(1, num_spins + 1, int(num_spins / 2), endpoint=False)
-#
-#     extrapolator = PolynomialExtrapolator(degree=DEGREE)
-#
-#     sl = slice(0, 100000)
-#     for miti, ideal, noisy in tqdm(zip(mitigated[sl], test_ideal_exp_vals[sl], test_noisy_exp_vals[sl]),
-#                                    total=len(test_circuits[sl])):
-#
-#         imbalance_ideal = calc_imbalance([ideal], even_qubits, odd_qubits)[0]
-#         imbalance_noisy = calc_imbalance([noisy], even_qubits, odd_qubits)[0]
-#         imbalance_mitigated = calc_imbalance([miti], even_qubits, odd_qubits)[0]
-#         for q in range(4):
-#             ideal_q = ideal[q]
-#             noisy_q = noisy[q]
-#             miti_q = miti[q]
-#             distances.append({
-#                 f"ideal_{q}": ideal_q,
-#                 f"noisy_{q}": noisy_q,
-#                 f"ngm_mitigated_{q}": miti_q,
-#                 f"dist_noisy_{q}": np.abs(ideal_q - noisy_q),
-#                 f"dist_mitigated_{q}": np.abs(ideal_q - miti_q),
-#                 f"dist_sq_noisy_{q}": np.square(ideal_q - noisy_q),
-#                 f"dist_sq_mitigated_{q}": np.square(ideal_q - miti_q),
-#                 "imb_ideal": imbalance_ideal,
-#                 "imb_noisy": imbalance_noisy,
-#                 "imb_ngm": imbalance_mitigated,
-#                 "imb_diff": imbalance_ideal - imbalance_mitigated
-#             })
-#
-#     plt.style.use({'figure.facecolor': 'white'})
-#
-#     df = pd.DataFrame(distances)
-#
-#     for q in range(4):
-#         print(f'RMSE_noisy_{q}:', np.sqrt(df[f"dist_sq_noisy_{q}"].mean()))
-#         print(f'RMSE_mitigated_{q}:', np.sqrt(df[f"dist_sq_mitigated_{q}"].mean()))
-#
-#     print(f'RMSE_noisy:', np.sqrt(np.mean([df[f"dist_sq_noisy_{q}"].mean() for q in range(4)])))
-#     print(f'RMSE_mitigated:', np.sqrt(np.mean([df[f"dist_sq_mitigated_{q}"].mean() for q in range(4)])))
-#
-#     sns.boxplot(data=df[
-#         ["dist_noisy_0", "dist_mitigated_0", "dist_noisy_1", "dist_mitigated_1", "dist_noisy_2", "dist_mitigated_2",
-#          "dist_noisy_3", "dist_mitigated_3"]], orient="h", showfliers=False)
-#     plt.title("Dist to ideal exp value")
-#     plt.show()
-#
-#     sns.histplot([df['ideal_0'], df['noisy_0'], df["ngm_mitigated_0"]], kde=True, bins=40)
-#     plt.title("Exp values distribution")
-#     plt.show()
-
-########################################################################################################################
-
-
-################################## Arbitrary Obs ##########################################
-############################################################################################
-DATA_FOLDER = './data/ising_init_from_qasm_tomo/'
-DEGREE = 1
-SHOTS = 10000
-SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_tomo_degree{DEGREE}.pk'
-BACKEND = backend_noisy
-
-test_circuits, test_ideal_exp_vals, test_noisy_exp_vals, obs = load_circuits_with_obs(DATA_FOLDER, '.pk')
+test_circuits, test_ideal_exp_vals, test_noisy_exp_vals = load_circuits(DATA_FOLDER, '.pk')
 print(len(test_circuits))
 test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
 
 extrapolator = PolynomialExtrapolator(degree=DEGREE)
-zne_strategy, zne_estimator, _, circs = get_zne_expval_parallel(test_circuits, extrapolator, BACKEND)
-
+zne_strategy, estimator, ob_list_all, shots, circs = get_zne_expval_parallel_single_z(test_circuits, extrapolator,
+                                                                                      BACKEND)
 
 def process_circ_ob_list(args):
-    i, circ, ob = args
-    padded_obs = form_all_qubit_observable(ob, get_measurement_qubits(circ, 6), BACKEND.configuration().num_qubits)
-    circ_no_meas_circ = remove_until_barrier(circ, ob)
-    job = zne_estimator.run(circ_no_meas_circ, SparsePauliOp(padded_obs), shots=SHOTS, zne_strategy=zne_strategy)
+    i, circ, ob_list = args
+    ob_list = list(map(SparsePauliOp, ob_list))
+    job = estimator.run([circ] * 4, ob_list, shots=shots, zne_strategy=zne_strategy)
     values = job.result().values
     return i, values
 
 
 if __name__ == '__main__':
     ###############################################################################
-    mitigated = np.zeros((len(circs), 1))
-    iterable = [(i, circ, ob) for i, (circ, ob) in enumerate(zip(circs, obs))]
+    mitigated = np.zeros((len(circs), 4))
+    iterable = [(i, circ, ob_list) for i, (circ, ob_list) in enumerate(zip(circs, ob_list_all))]
     iterable = tqdm(iterable, total=len(circs), desc="Processing", ncols=80)
     with Pool() as pool:
         results = pool.map(process_circ_ob_list, iterable)
@@ -378,7 +272,114 @@ if __name__ == '__main__':
     for i, values in results:
         mitigated[i] = values
 
+    mitigated *= -1
+    print(mitigated)
+
     with open(SAVE_PATH, 'wb') as file:
         pickle.dump(mitigated, file)
     ###############################################################################
 
+    ###############################################################################
+    # with open(SAVE_PATH, 'wb') as file:
+    #     mitigated = pickle.load(file)
+    ###############################################################################
+
+    ###############################################################################
+    fix_random_seed(0)
+    distances = []
+
+    num_spins = 4
+    even_qubits = np.linspace(0, num_spins, int(num_spins / 2), endpoint=False)
+    odd_qubits = np.linspace(1, num_spins + 1, int(num_spins / 2), endpoint=False)
+
+    extrapolator = PolynomialExtrapolator(degree=DEGREE)
+
+    sl = slice(0, 100000)
+    for miti, ideal, noisy in tqdm(zip(mitigated[sl], test_ideal_exp_vals[sl], test_noisy_exp_vals[sl]),
+                                   total=len(test_circuits[sl])):
+
+        imbalance_ideal = calc_imbalance([ideal], even_qubits, odd_qubits)[0]
+        imbalance_noisy = calc_imbalance([noisy], even_qubits, odd_qubits)[0]
+        imbalance_mitigated = calc_imbalance([miti], even_qubits, odd_qubits)[0]
+        for q in range(4):
+            ideal_q = ideal[q]
+            noisy_q = noisy[q]
+            miti_q = miti[q]
+            distances.append({
+                f"ideal_{q}": ideal_q,
+                f"noisy_{q}": noisy_q,
+                f"ngm_mitigated_{q}": miti_q,
+                f"dist_noisy_{q}": np.abs(ideal_q - noisy_q),
+                f"dist_mitigated_{q}": np.abs(ideal_q - miti_q),
+                f"dist_sq_noisy_{q}": np.square(ideal_q - noisy_q),
+                f"dist_sq_mitigated_{q}": np.square(ideal_q - miti_q),
+                "imb_ideal": imbalance_ideal,
+                "imb_noisy": imbalance_noisy,
+                "imb_ngm": imbalance_mitigated,
+                "imb_diff": imbalance_ideal - imbalance_mitigated
+            })
+
+    plt.style.use({'figure.facecolor': 'white'})
+
+    df = pd.DataFrame(distances)
+
+    for q in range(4):
+        print(f'RMSE_noisy_{q}:', np.sqrt(df[f"dist_sq_noisy_{q}"].mean()))
+        print(f'RMSE_mitigated_{q}:', np.sqrt(df[f"dist_sq_mitigated_{q}"].mean()))
+
+    print(f'RMSE_noisy:', np.sqrt(np.mean([df[f"dist_sq_noisy_{q}"].mean() for q in range(4)])))
+    print(f'RMSE_mitigated:', np.sqrt(np.mean([df[f"dist_sq_mitigated_{q}"].mean() for q in range(4)])))
+
+    sns.boxplot(data=df[
+        ["dist_noisy_0", "dist_mitigated_0", "dist_noisy_1", "dist_mitigated_1", "dist_noisy_2", "dist_mitigated_2",
+         "dist_noisy_3", "dist_mitigated_3"]], orient="h", showfliers=False)
+    plt.title("Dist to ideal exp value")
+    plt.show()
+
+    sns.histplot([df['ideal_0'], df['noisy_0'], df["ngm_mitigated_0"]], kde=True, bins=40)
+    plt.title("Exp values distribution")
+    plt.show()
+
+########################################################################################################################
+
+
+################################## Arbitrary Obs ##########################################
+############################################################################################
+# DATA_FOLDER = './data/ising_init_from_qasm_tomo/'
+# DEGREE = 1
+# SHOTS = 10000
+# SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_tomo_degree{DEGREE}.pk'
+# BACKEND = backend_noisy
+#
+# test_circuits, test_ideal_exp_vals, test_noisy_exp_vals, obs = load_circuits_with_obs(DATA_FOLDER, '.pk')
+# print(len(test_circuits))
+# test_noisy_exp_vals = [x[0] for x in test_noisy_exp_vals]
+#
+# extrapolator = PolynomialExtrapolator(degree=DEGREE)
+# zne_strategy, zne_estimator, _, circs = get_zne_expval_parallel(test_circuits, extrapolator, BACKEND)
+#
+#
+# def process_circ_ob_list(args):
+#     i, circ, ob = args
+#     padded_obs = form_all_qubit_observable(ob, get_measurement_qubits(circ, 6), BACKEND.configuration().num_qubits)
+#     circ_no_meas_circ = remove_until_barrier(circ, ob)
+#     job = zne_estimator.run(circ_no_meas_circ, SparsePauliOp(padded_obs), shots=SHOTS, zne_strategy=zne_strategy)
+#     values = job.result().values
+#     return i, values
+#
+#
+# if __name__ == '__main__':
+#     ###############################################################################
+#     mitigated = np.zeros((len(circs), 1))
+#     iterable = [(i, circ, ob) for i, (circ, ob) in enumerate(zip(circs, obs))]
+#     iterable = tqdm(iterable, total=len(circs), desc="Processing", ncols=80)
+#     with Pool() as pool:
+#         results = pool.map(process_circ_ob_list, iterable)
+#
+#     for i, values in results:
+#         mitigated[i] = values
+#
+#     with open(SAVE_PATH, 'wb') as file:
+#         pickle.dump(mitigated, file)
+#     ###############################################################################
+#
