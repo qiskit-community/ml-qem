@@ -169,7 +169,7 @@ def get_zne_expval_parallel_single_z(
         circs,
         extrapolator,
         backend,
-        noise_factors=(1, 3),
+        noise_factors=(1, 3, 5, 7),
         amplifier=LocalFoldingAmplifier(gates_to_fold=2),
         shots: int = 10000,
 ) -> float:
@@ -192,7 +192,7 @@ def get_zne_expval_parallel(
         circs,
         extrapolator,
         backend,
-        noise_factors=(1, 3, 5, 7),
+        noise_factors=(1, 3),
         amplifier=LocalFoldingAmplifier(gates_to_fold=2),
         shots: int = 10000,
 ) -> float:
