@@ -169,7 +169,7 @@ def get_zne_expval_parallel_single_z(
         circs,
         extrapolator,
         backend,
-        noise_factors=(1, 3, 5, 7),
+        noise_factors=(1, 3),
         amplifier=LocalFoldingAmplifier(gates_to_fold=2),
         shots: int = 10000,
 ) -> float:
@@ -241,7 +241,7 @@ def remove_until_barrier(qc, obs):
 # DATA_FOLDER = './data/haoran_mbd/random_circuits/val/'
 # SAVE_PATH = './zne_mitigated/random_circuits.pk'
 DATA_FOLDER = './data/ising_init_from_qasm_no_readout/val_extra/'
-DEGREE = 2
+DEGREE = 1
 SAVE_PATH = f'zne_mitigated/ising_init_from_qasm_no_readout_extra_degree{DEGREE}.pk'
 BACKEND = backend_noisy_no_readout
 
