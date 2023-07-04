@@ -145,14 +145,14 @@ def recursive_dict_loop(my_dict, parent_key=None, out=None, target_key1=None, ta
     return out or 0.
 
 
-def encode_data_v2_ecr(circuits, ideal_exp_vals, noisy_exp_vals, obs_size, meas_bases=None):
+def encode_data_v2_ecr(circuits, ideal_exp_vals, noisy_exp_vals, obs_size, meas_bases=None, two_q_gate='ecr'):
     if isinstance(noisy_exp_vals[0], list) and len(noisy_exp_vals[0]) == 1:
         noisy_exp_vals = [x[0] for x in noisy_exp_vals]
 
     if meas_bases is None:
         meas_bases = [[]]
 
-    gates_set = ['ecr', 'sx', 'x', 'id', 'rz']
+    gates_set = [two_q_gate] + ['sx', 'x', 'id', 'rz']
 
     vec = []
 
