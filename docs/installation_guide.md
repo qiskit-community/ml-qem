@@ -2,9 +2,7 @@
 
 ## PyPi
 
-```shell
-pip install blackwater
-```
+Installation through PyPi is not available
 
 ## Local installation
 
@@ -15,20 +13,14 @@ pip install blackwater
 pip install -r requirements.txt
 ```
 
-3. Installing Optional Dependencies
-
-```shell
-pip install -r requirements-dev.txt
-```
-4. Installing Blackwater
+3. Installing Blackwater
 
 ```shell
 pip install .
 ```
 
-5. Testing the Installation
+4. Testing the Installation
 
 ```shell
-tox -epy39
-tox -elint
+Explore `/docs/guides/` or `/docs/tutorials/` notebooks with examples.
 ```
