@@ -17,6 +17,7 @@
       ~UnitarySynthesisEnv.apply_action_to_circuit
       ~UnitarySynthesisEnv.close
       ~UnitarySynthesisEnv.get_reward
+      ~UnitarySynthesisEnv.get_wrapper_attr
       ~UnitarySynthesisEnv.one_hot_encode_instr_type
       ~UnitarySynthesisEnv.render
       ~UnitarySynthesisEnv.reset

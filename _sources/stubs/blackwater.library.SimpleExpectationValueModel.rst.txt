@@ -19,6 +19,7 @@
       ~SimpleExpectationValueModel.bfloat16
       ~SimpleExpectationValueModel.buffers
       ~SimpleExpectationValueModel.children
+      ~SimpleExpectationValueModel.compile
       ~SimpleExpectationValueModel.cpu
       ~SimpleExpectationValueModel.cuda
       ~SimpleExpectationValueModel.double

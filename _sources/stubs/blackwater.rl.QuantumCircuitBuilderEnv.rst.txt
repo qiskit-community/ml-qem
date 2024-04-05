@@ -16,6 +16,7 @@
       ~QuantumCircuitBuilderEnv.__init__
       ~QuantumCircuitBuilderEnv.apply_action_to_circuit
       ~QuantumCircuitBuilderEnv.close
+      ~QuantumCircuitBuilderEnv.get_wrapper_attr
       ~QuantumCircuitBuilderEnv.one_hot_encode_instr_type
       ~QuantumCircuitBuilderEnv.render
       ~QuantumCircuitBuilderEnv.reset
