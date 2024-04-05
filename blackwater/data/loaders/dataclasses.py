@@ -7,7 +7,7 @@ from torch_geometric.transforms import BaseTransform
 
 from blackwater.data.dataio import ExpValDataReader
 
-
+# pylint: disable=abstract-method
 class ExpValDataSet(Dataset):
     """ExpValDataLoader."""
 
