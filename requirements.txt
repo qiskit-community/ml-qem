@@ -2,6 +2,6 @@ torch_geometric>=2.0.0
 torch-sparse>=0.6.16
 qiskit-aer>=0.11.0,<=0.13.3
 qiskit==0.43.2
-# qiskit-ibmq-provider>=0.19.2
+qiskit-ibmq-provider==0.20.2
 qiskit-experiments>=0.4.0
 seaborn>=0.13.2
