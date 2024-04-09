@@ -22,11 +22,11 @@ from qiskit.transpiler.exceptions import TranspilerError
 class LearningMethodEstimatorProcessor:
     def process(
             self,
-            expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+            expectation_value, #: np.ndarray[Any, np.dtype[np.float64]],
             circuits: Union[QuantumCircuit, List[QuantumCircuit]],
             observables: Union[PauliSumOp, List[PauliSumOp]],
             parameter_values: Tuple[Tuple[float, ...], ...],
-    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+    ): # -> np.ndarray[Any, np.dtype[np.float64]]:
         raise NotImplementedError
 
 
@@ -43,11 +43,11 @@ class ZNEProcessor(LearningMethodEstimatorProcessor):
 
     def process(
             self,
-            expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+            expectation_value, #: np.ndarray[Any, np.dtype[np.float64]],
             circuits: Union[QuantumCircuit, List[QuantumCircuit]],
             observables: Union[PauliSumOp, List[PauliSumOp]],
             parameter_values: Tuple[Tuple[float, ...], ...],
-    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+    ): #-> np.ndarray[Any, np.dtype[np.float64]]:
 
         circuits_with_meas = circuits.copy()
         circuits_with_meas.measure_all()
@@ -97,11 +97,11 @@ class ScikitLearningModelProcessor(LearningMethodEstimatorProcessor):
 
     def process(
             self,
-            expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+            expectation_value, #: np.ndarray[Any, np.dtype[np.float64]],
             circuits: Union[QuantumCircuit, List[QuantumCircuit]],
             observables: Union[PauliSumOp, List[PauliSumOp]],
             parameter_values: Tuple[Tuple[float, ...], ...],
-    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+    ): # -> np.ndarray[Any, np.dtype[np.float64]]:
 
         num_qubits = circuits.num_qubits
 
@@ -159,11 +159,11 @@ class TorchLearningModelProcessor(LearningMethodEstimatorProcessor):
         self._properties = get_backend_properties_v1(backend)
 
     def process(self,
-                expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+                expectation_value, #: np.ndarray[Any, np.dtype[np.float64]],
                 circuits: Union[QuantumCircuit, List[QuantumCircuit]],
                 observables: Union[PauliSumOp, List[PauliSumOp]],
                 parameter_values: Tuple[Tuple[float, ...], ...]
-                ) -> np.ndarray[Any, np.dtype[np.float64]]:
+                ): #-> np.ndarray[Any, np.dtype[np.float64]]:
 
         results = []
 
@@ -188,9 +188,9 @@ class TorchLearningModelProcessor(LearningMethodEstimatorProcessor):
 
 
 class EmptyProcessor(LearningMethodEstimatorProcessor):
-    def process(self, expectation_value: np.ndarray[Any, np.dtype[np.float64]],
+    def process(self, expectation_value, #: np.ndarray[Any, np.dtype[np.float64]],
                 circuits: Union[QuantumCircuit, List[QuantumCircuit]], observables: Union[PauliSumOp, List[PauliSumOp]],
-                parameter_values: Tuple[Tuple[float, ...], ...]) -> np.ndarray[Any, np.dtype[np.float64]]:
+                parameter_values: Tuple[Tuple[float, ...], ...]): # -> np.ndarray[Any, np.dtype[np.float64]]:
         return expectation_value
 
 
