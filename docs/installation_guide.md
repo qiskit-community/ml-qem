@@ -2,33 +2,21 @@
 
 ## PyPi
 
-```shell
-pip install blackwater
-```
+PyPi installation is not available yet.
 
 ## Local installation
 
 1. Clone repo
-2. Installing Depencencies
+2. Create and activate new python env
+3. Install pytorch https://pytorch.org/get-started/locally/#start-locally
+4. Install other dependencies
 
 ```shell
 pip install -r requirements.txt
 ```
 
-3. Installing Optional Dependencies
+5. Installing Blackwater
 
 ```shell
-pip install -r requirements-dev.txt
-```
-4. Installing Blackwater
-
-```shell
-pip install .
-```
-
-5. Testing the Installation
-
-```shell
-tox -epy39
-tox -elint
+pip install -e .
 ```
