@@ -16,7 +16,7 @@
 ---------------------------------------------------------------------------------------------------
 
 ### Instructions for Use
-We provide two datasets and notebooks for [demo](./docs/demo). The first demo shows our ML-QEM method mimicking digital ZNE + Pauli twirling on a 100Q TFIM Trotter circuit. The second demo shows our ML-QEM mitigating the expectation values of a 4Q TFIM Trotter circuit on real hardware, outperforming digital ZNE.
+We provide two datasets and notebooks for demonstration. The [first demo](./docs/demos/demo1_rf_mimic_zne_100q_twirl.ipynb) shows our ML-QEM method mimicking digital ZNE + Pauli twirling on a 100Q TFIM Trotter circuit. The [second demo](./docs/demos/emo2_ising_4q_hardware_plot.ipynb) shows our ML-QEM mitigating the expectation values of a 4Q TFIM Trotter circuit on real hardware, outperforming digital ZNE.
 
 Other notebooks (with prefix "hXX", e.g., h01_mbd.ipynb), python scripts, and datasets can be found in this [folder](./docs/tutorials).
 
