@@ -8,6 +8,10 @@ PyPi installation is not available yet.
 
 1. Clone repo
 2. Create and activate new python env
+```shell
+conda create -n mlqem python=3.9
+```
+
 3. Install pytorch https://pytorch.org/get-started/locally/#start-locally
 4. Install other dependencies
 
@@ -20,3 +24,5 @@ pip install -r requirements.txt
 ```shell
 pip install -e .
 ```
+
+Estimated time to install all dependencies: <5 minutes
