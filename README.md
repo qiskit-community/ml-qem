@@ -1,8 +1,5 @@
 # ML-QEM
 
-![logo](./docs/images/blackwater_logo.png)
-
-
 ### Table of Contents
 
 ##### For Users
@@ -19,8 +16,11 @@
 ---------------------------------------------------------------------------------------------------
 
 ### Instructions for Use
+We provide two datasets and notebooks for [demo](./docs/demo). The first demo shows our ML-QEM method mimicking digital ZNE + Pauli twirling on a 100Q TFIM Trotter circuit. The second demo shows our ML-QEM mitigating the expectation values of a 4Q TFIM Trotter circuit on real hardware, outperforming digital ZNE.
 
+Other notebooks (with prefix "hXX", e.g., h01_mbd.ipynb), python scripts, and datasets can be found in this [folder](./docs/tutorials).
 
+Specifically, circuit-level features and MLP models can be found in [mlp.py](./docs/tutorials/mlp.py), and GNN models can be found in [gnn.py](./docs/tutorials/gnn.py).
 
 ----------------------------------------------------------------------------------------------------
 
