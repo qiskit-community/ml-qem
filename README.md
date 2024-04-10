@@ -6,7 +6,7 @@
 
 1.  [Installation](./docs/installation_guide.md)
 2.  [Instructions for Use](#instruction-for-use)
-3.  [Demos](./docs/demo)
+3.  [Demos](./docs/demos)
 4.  [Citation](#citation)
 5.  [How to Give Feedback](#how-to-give-feedback)
 6.  [Contribution Guidelines](#contribution-guidelines)
