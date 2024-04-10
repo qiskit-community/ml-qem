@@ -1,8 +1,6 @@
-# Blackwater
+# ML-QEM
 
 ![logo](./docs/images/blackwater_logo.png)
-
-Package for solving quantum computing problems using machine learning.
 
 
 ### Table of Contents
