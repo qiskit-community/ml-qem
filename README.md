@@ -10,11 +10,33 @@ Package for solving quantum computing problems using machine learning.
 ##### For Users
 
 1.  [Installation](./docs/installation_guide.md)
-2.  [Tutorials](./docs/tutorials)
-3.  [How to Give Feedback](#how-to-give-feedback)
-4.  [Contribution Guidelines](#contribution-guidelines)
-5.  [References and Acknowledgements](#references-and-acknowledgements)
-6.  [License](#license)
+2.  [Instructions for Use](#instruction-for-use)
+3.  [Demos](./docs/demo)
+4.  [Citation](#citation)
+5.  [How to Give Feedback](#how-to-give-feedback)
+6.  [Contribution Guidelines](#contribution-guidelines)
+7.  [References and Acknowledgements](#references-and-acknowledgements)
+8.  [License](#license)
+
+---------------------------------------------------------------------------------------------------
+
+### Instructions for Use
+
+
+
+----------------------------------------------------------------------------------------------------
+
+### Citation
+
+Using the code please consider citing:
+```
+@article{ML-QEM,
+  title={Machine Learning for Practical Quantum Error Mitigation}, 
+  author={Haoran Liao and Derek S. Wang and Iskandar Sitdikov and Ciro Salcedo and Alireza Seif and Zlatko K. Minev},
+  year={2023},
+  journal={arXiv:2309.17368},
+}
+```
 
 ----------------------------------------------------------------------------------------------------
 
