@@ -27,7 +27,7 @@ estimator_noisy.set_transpile_options(optimization_level=0)
 estimator_ideal = Estimator()
 num_shots = 10000
 
-NUM_QUBITS = 3
+NUM_QUBITS = 2
 N = 5000
 
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # pauli_list_full = [''.join(s) for s in itertools.product(['X', 'Y', 'Z', 'I'], repeat=NUM_QUBITS)]
     # pauli_list_full.remove('I' * NUM_QUBITS)
     # np.random.shuffle(pauli_list_full)
-    pauli_list_full = ['XXX', 'ZZZ', 'YYY']
+    pauli_list_full = ['XX', 'ZZ']
     print(pauli_list_full)
     pauli_list_full_tiled = np.repeat(pauli_list_full, N).tolist()
     print(len(pauli_list_full_tiled))
@@ -141,5 +141,5 @@ if __name__ == '__main__':
         entries.append(to_append)
     print(len(entries))
 
-    with open(f'./data/vqe/two_local_{NUM_QUBITS}q_3reps_oplev0_rycz.pk', 'wb') as file:
+    with open(f'./data/vqe/two_local_{NUM_QUBITS}q_3reps_oplev0_rycz_20240717.pk', 'wb') as file:
         pickle.dump(entries, file)
