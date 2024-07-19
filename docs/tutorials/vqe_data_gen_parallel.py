@@ -16,12 +16,14 @@ from tqdm import tqdm
 from mbd_utils import cal_all_z_exp
 
 from qiskit.primitives import BackendEstimator, Estimator
+from noise_utils import RemoveReadoutErrors
 
 # backend_noisy = AerSimulator.from_backend(backend)  # Noisy
 # run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
 # qasm_sim = QasmSimulator()
 
-backend = FakeLima()
+# backend = FakeLima()
+backend = RemoveReadoutErrors().remove_readout_errors()[0]
 estimator_noisy = BackendEstimator(backend)
 estimator_noisy.set_transpile_options(optimization_level=0)
 estimator_ideal = Estimator()
@@ -141,5 +143,5 @@ if __name__ == '__main__':
         entries.append(to_append)
     print(len(entries))
 
-    with open(f'./data/vqe/two_local_{NUM_QUBITS}q_3reps_oplev0_rycz_20240717.pk', 'wb') as file:
+    with open(f'./data/vqe/two_local_{NUM_QUBITS}q_3reps_oplev0_rycz_20240717_no_readout.pk', 'wb') as file:
         pickle.dump(entries, file)
