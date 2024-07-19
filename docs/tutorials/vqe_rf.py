@@ -134,10 +134,10 @@ if __name__ == '__main__':
     import warnings
     warnings.filterwarnings("ignore")
 
-    circuits, ideal_exp_vals, noisy_exp_vals, meas_bases = load_circuits('./data/vqe/', '.pk', specific_file='./data/vqe/two_local_2q_3reps_oplev0_rycz.pk')
+    circuits, ideal_exp_vals, noisy_exp_vals, meas_bases = load_circuits('./data/vqe/', '.pk', specific_file='./data/vqe/two_local_2q_3reps_oplev0_rycz_20240717.pk')
     print(len(circuits))
 
-    sep = 2999
+    sep = 8999
     train_circuits, train_ideal_exp_vals, train_noisy_exp_vals, train_meas_bases = circuits[:sep], ideal_exp_vals[:sep], \
         noisy_exp_vals[:sep], meas_bases[:sep]
     test_circuits, test_ideal_exp_vals, test_noisy_exp_vals, test_meas_bases = circuits[sep:], ideal_exp_vals[sep:], \
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     #################################################################################
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
-    rfr = RandomForestRegressor(n_estimators=100)
+    rfr = RandomForestRegressor(n_estimators=300)
     rfr.fit(X_train, y_train)
 
     #################################################################################
@@ -255,14 +255,15 @@ if __name__ == '__main__':
         lst.append(values)
     optimizer = COBYLA(maxiter=100)
     ansatz = TwoLocal(num_qubits=NUM_QUBITS, rotation_blocks="ry", entanglement_blocks="cz", reps=3)
-    init_pt = np.random.uniform(-5, 5, ansatz.num_parameters)
+    # init_pt = np.random.uniform(-5, 5, ansatz.num_parameters)
+    init_pt = np.ones(ansatz.num_parameters)
 
     learning_estimator = learning(BackendEstimator, processor=processor, backend=FakeLima(), skip_transpile=True)
     estimator_mitigated = learning_estimator(backend=FakeLima())
     history_mitigated = []
     vqe = VQE(estimator=estimator_mitigated, ansatz=ansatz, optimizer=optimizer, initial_point=init_pt,
               callback=lambda a, params, values, d: callback_func(history_mitigated, values, params))
-    result_mitigated = vqe.compute_minimum_eigenvalue(operator)
+    result_mitigated = vqe.compute_minimum_eigenvalue(operator, separate_observables=True)
 
     ##########################################################################################
     # fix_random_seed(0)
