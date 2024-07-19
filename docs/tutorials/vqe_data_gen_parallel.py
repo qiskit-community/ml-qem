@@ -1,21 +1,15 @@
-from tqdm import tqdm
-import itertools
+import pickle
+from multiprocessing import Pool
+
 import pickle
 from multiprocessing import Pool
 
 import numpy as np
-from qiskit import QuantumCircuit, transpile
-from qiskit import execute
+from qiskit import transpile
 from qiskit.circuit.library import TwoLocal
-from qiskit.providers.fake_provider import FakeLima
-from qiskit.result import marginal_counts
-from qiskit_aer import AerSimulator
-from qiskit_aer import QasmSimulator
+from qiskit.primitives import BackendEstimator, Estimator
 from tqdm import tqdm
 
-from mbd_utils import cal_all_z_exp
-
-from qiskit.primitives import BackendEstimator, Estimator
 from noise_utils import RemoveReadoutErrors
 
 # backend_noisy = AerSimulator.from_backend(backend)  # Noisy

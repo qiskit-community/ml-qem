@@ -1,55 +1,32 @@
 import os
-from pathlib import Path
-from tqdm import tqdm
 import pickle
-
-from qiskit import transpile
-from qiskit.circuit.random import random_circuit
-from qiskit.providers.fake_provider import FakeLimaV2
-from qiskit.quantum_info import SparsePauliOp
-from qiskit.primitives import BackendEstimator, Estimator
-
-from tqdm import tqdm
-
-from blackwater.data.utils import get_backend_properties_v1, encode_pauli_sum_op
-from blackwater.exception import BlackwaterException
-
-from qiskit import QuantumCircuit, transpile
-from qiskit.opflow import PauliSumOp
-from qiskit.primitives import BaseEstimator, EstimatorResult
-from qiskit.providers import JobV1 as Job, Options, BackendV2, Backend, BackendV1
-from qiskit.quantum_info import SparsePauliOp
-from qiskit.providers.fake_provider import FakeLimaV2, FakeLima, ConfigurableFakeBackend
-from qiskit.opflow import I, X, Z, Y
-from qiskit.algorithms.minimum_eigensolvers import VQE, VQEResult
-from qiskit.algorithms.optimizers import SLSQP, SPSA, COBYLA, ADAM
-from qiskit.circuit.library import TwoLocal
-
-from blackwater.data.utils import generate_random_pauli_sum_op, get_backend_properties_v1
-from blackwater.library.learning.estimator import learning, EmptyProcessor, TorchLearningModelProcessor, \
-    ScikitLearningModelProcessor, ZNEProcessor
-from qiskit_aer import AerSimulator, QasmSimulator
-import itertools
-import numpy as np
-from mbd_utils import cal_all_z_exp
-
-from mlp import encode_data, MLP1
-import torch
-from torch.utils.data import Dataset, DataLoader, TensorDataset
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-import torch.nn as nn
 import random
 
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import pandas as pd
-from qiskit.result import marginal_counts
-from qiskit import execute
-from qiskit_aer import QasmSimulator
+import torch
+from qiskit import QuantumCircuit, transpile
+from qiskit.algorithms.minimum_eigensolvers import VQE
+from qiskit.algorithms.optimizers import COBYLA
+from qiskit.circuit.library import TwoLocal
+from qiskit.opflow import I, X, Z
+from qiskit.primitives import BackendEstimator, Estimator
+from qiskit.providers.fake_provider import FakeLima
 from qiskit.quantum_info import Operator
+from qiskit.quantum_info import SparsePauliOp
+from qiskit.result import marginal_counts
+from qiskit_aer import QasmSimulator
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 from zne import zne, ZNEStrategy
-from zne.noise_amplification import *
 from zne.extrapolation import *
+from zne.noise_amplification import *
+
+from blackwater.data.utils import encode_pauli_sum_op
+from blackwater.data.utils import get_backend_properties_v1
+from blackwater.library.learning.estimator import learning, ScikitLearningModelProcessor, ZNEProcessor
+from mlp import encode_data
 
 qasm_sim = QasmSimulator()
 
@@ -171,7 +148,7 @@ if __name__ == '__main__':
     # train_circuits[0].decompose().draw('mpl', fold=-1, idle_wires=False).show()
 
     #################################################################################
-    from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+    from sklearn.ensemble import RandomForestRegressor
 
     rfr = RandomForestRegressor(n_estimators=300)
     rfr.fit(X_train, y_train)
