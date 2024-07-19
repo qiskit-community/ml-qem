@@ -57,7 +57,7 @@ backend = FakeLima()
 properties = get_backend_properties_v1(backend)
 
 backend_ideal = QasmSimulator()  # Noiseless
-backend_noisy = AerSimulator.from_backend(backend)  # Noisy
+backend_noisy = backend # Noisy
 
 run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
 run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
@@ -134,8 +134,14 @@ def load_circuits(data_dir, f_ext='.json', specific_file=None):
 
 
 if __name__ == '__main__':
-    circuits, ideal_exp_vals, noisy_exp_vals, meas_bases = load_circuits('./data/vqe/', '.pk', specific_file='./data/vqe/two_local_2q_3reps_oplev0_rycz.pk')
+    circuits, ideal_exp_vals, noisy_exp_vals, meas_bases = load_circuits('./data/vqe/', '.pk', specific_file='./data/vqe/two_local_2q_3reps_oplev0_rycz_20240717.pk')
     print(len(circuits))
+
+    combined = list(zip(circuits, ideal_exp_vals, noisy_exp_vals, meas_bases))
+    random.seed(42)
+    random.shuffle(combined)
+    list1, list2, list3, list4 = zip(*combined)
+    circuits, ideal_exp_vals, noisy_exp_vals, meas_bases = list(list1), list(list2), list(list3), list(list4)
 
     sep = 2000
     train_circuits, train_ideal_exp_vals, train_noisy_exp_vals, train_meas_bases = circuits[:sep], ideal_exp_vals[:sep], \
@@ -227,6 +233,7 @@ if __name__ == '__main__':
 
     ZNEEstimator = zne(BackendEstimator)
     zne_estimator = ZNEEstimator(backend=backend_noisy)
+    zne_estimator_at_best_iter = ZNEEstimator(backend=backend_noisy)
     zne_strategy = ZNEStrategy(
         noise_factors=(1, 3),
         noise_amplifier=LocalFoldingAmplifier(gates_to_fold=2),
@@ -261,11 +268,11 @@ if __name__ == '__main__':
 
                 bond_operators.append((length, operator))
     ##########################################################################################
-
     bond_lengths = []
     mitigated = []
     noisy = []
     zne = []
+    zne_at_best_iter = []
     ideal = []
     diagonalization = []
     for bond_length, operator in bond_operators:
@@ -278,8 +285,8 @@ if __name__ == '__main__':
         init_pt = np.ones(ansatz.num_parameters)
 
         ##########################################################################################
-        learning_estimator = learning(BackendEstimator, processor=processor, backend=FakeLima(), skip_transpile=True)
-        estimator_mitigated = learning_estimator(backend=FakeLima())
+        learning_estimator = learning(BackendEstimator, processor=processor, backend=backend_noisy, skip_transpile=True)
+        estimator_mitigated = learning_estimator(backend=backend_noisy)
         history_mitigated = []
         vqe = VQE(estimator=estimator_mitigated, ansatz=ansatz, optimizer=optimizer, initial_point=init_pt,
                   callback=lambda a, params, values, d: callback_func(history_mitigated, values, params))
@@ -302,17 +309,24 @@ if __name__ == '__main__':
         result_noisy = vqe.compute_minimum_eigenvalue(operator)
 
         ##########################################################################################
-        zne_estimator = learning(BackendEstimator, processor=zne_processor, backend=FakeLima(), skip_transpile=True)
-        estimator_zne_mitigated = zne_estimator(backend=FakeLima())
+        optimal_circuit_from_noisy = result_noisy.optimal_circuit.assign_parameters(result_noisy.optimal_parameters).decompose()
+        job = zne_estimator_at_best_iter.run(circuits=optimal_circuit_from_noisy, observables=operator, zne_strategy=zne_strategy)
+        result_zne_at_best_iter = job.result().values[0]
+
+        ##########################################################################################
+        sep_ob_zne = True
+        zne_estimator = learning(BackendEstimator, processor=zne_processor, backend=backend_noisy, skip_transpile=True)
+        estimator_zne_mitigated = zne_estimator(backend=backend_noisy)
         history_zne_mitigated = []
         vqe = VQE(estimator=estimator_zne_mitigated, ansatz=ansatz, optimizer=optimizer, initial_point=init_pt,
-                  callback=lambda a, params, values, d: callback_func(history_noisy, values, params))
-        result_zne_mitigated = vqe.compute_minimum_eigenvalue(operator)
+                  callback=lambda a, params, values, d: callback_func(history_zne_mitigated, values, params))
+        result_zne_mitigated = vqe.compute_minimum_eigenvalue(operator, separate_observables=sep_ob_zne)
 
     ##########################################################################################
         print('#' * 50)
         print("Noisy", result_noisy.optimal_value)
         print('ZNE', result_zne_mitigated.optimal_value)
+        print('ZNE at best iter', result_zne_at_best_iter)
         print("Mitigated", result_mitigated.optimal_value)
         print("Ideal", result_ideal.optimal_value)
         print("Diagonalization", min(np.real_if_close(np.linalg.eig(Operator(operator))[0])))
@@ -321,14 +335,15 @@ if __name__ == '__main__':
         bond_lengths.append(bond_length)
         noisy.append(result_noisy.optimal_value)
         zne.append(result_zne_mitigated.optimal_value)
+        zne_at_best_iter.append(result_zne_at_best_iter)
         mitigated.append(result_mitigated.optimal_value)
         ideal.append(result_ideal.optimal_value)
         diagonalization.append(min(np.real_if_close(np.linalg.eig(Operator(operator))[0])))
 
-
     plt.plot(bond_lengths, diagonalization, label='ideal')
     plt.plot(bond_lengths, mitigated, label='mitigated')
-    plt.plot(bond_lengths, zne, label='mitigated')
+    plt.plot(bond_lengths, zne, label='zne_mitigated')
+    plt.plot(bond_lengths, zne_at_best_iter, label='zne_mitigated_at_best_iter')
     plt.plot(bond_lengths, noisy, label='noisy')
     plt.legend()
     plt.show()
@@ -339,7 +354,8 @@ if __name__ == '__main__':
         'mitigated': mitigated,
         'noisy': noisy,
         'zne': zne,
+        'zne_at_best_iter': zne_at_best_iter,
     }
 
-    with open('../paper_figures/vqe_with_zne.pk', 'wb') as file:
+    with open('../paper_figures/vqe_with_zne_202407.pk', 'wb') as file:
         pickle.dump(to_save, file)
