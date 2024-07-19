@@ -58,7 +58,7 @@ backend = RemoveReadoutErrors(FakeLima()).remove_readout_errors()[0]
 properties = get_backend_properties_v1(backend)
 
 backend_ideal = QasmSimulator()  # Noiseless
-backend_noisy = AerSimulator.from_backend(backend)  # Noisy
+backend_noisy = backend # Noisy
 
 run_config_ideal = {'shots': 10000, 'backend': backend_ideal, 'name': 'ideal'}
 run_config_noisy = {'shots': 10000, 'backend': backend_noisy, 'name': 'noisy'}
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     #################################################################################
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
-    rfr = RandomForestRegressor(n_estimators=200)
+    rfr = RandomForestRegressor(n_estimators=300)
     rfr.fit(X_train, y_train)
 
     #################################################################################
@@ -234,6 +234,7 @@ if __name__ == '__main__':
 
     ZNEEstimator = zne(BackendEstimator)
     zne_estimator = ZNEEstimator(backend=backend_noisy)
+    zne_estimator_at_best_iter = ZNEEstimator(backend=backend_noisy)
     zne_strategy = ZNEStrategy(
         noise_factors=(1, 3),
         noise_amplifier=LocalFoldingAmplifier(gates_to_fold=2),
@@ -272,6 +273,7 @@ if __name__ == '__main__':
     mitigated = []
     noisy = []
     zne = []
+    zne_at_best_iter = []
     ideal = []
     diagonalization = []
     for bond_length, operator in bond_operators:
@@ -279,7 +281,7 @@ if __name__ == '__main__':
         def callback_func(lst, values, params):
             print(f'Values: {values}', f'Params: {params}')
             lst.append(values)
-        optimizer = COBYLA(maxiter=50)
+        optimizer = COBYLA(maxiter=100)
         ansatz = TwoLocal(num_qubits=NUM_QUBITS, rotation_blocks="ry", entanglement_blocks="cz", reps=3)
         init_pt = np.ones(ansatz.num_parameters)
 
@@ -307,10 +309,10 @@ if __name__ == '__main__':
                   callback=lambda a, params, values, d: callback_func(history_noisy, values, params))
         result_noisy = vqe.compute_minimum_eigenvalue(operator)
 
-        ##########################################################################################
-        # optimal_circuit_from_noisy = result_noisy.optimal_circuit.bind_parameters(result_noisy.optimal_parameters)
-        # job = zne_estimator.run(optimal_circuit_from_noisy, operator)
-        # result_zne_at_best_iter = job.result().values[0]
+        #########################################################################################
+        optimal_circuit_from_noisy = result_noisy.optimal_circuit.assign_parameters(result_noisy.optimal_parameters).decompose()
+        job = zne_estimator_at_best_iter.run(circuits=optimal_circuit_from_noisy, observables=operator, zne_strategy=zne_strategy)
+        result_zne_at_best_iter = job.result().values[0]
 
         ##########################################################################################
         sep_ob_zne = True
@@ -325,6 +327,7 @@ if __name__ == '__main__':
         print('#' * 50)
         print("Noisy", result_noisy.optimal_value)
         print('ZNE', result_zne_mitigated.optimal_value)
+        print('ZNE at best iter', result_zne_at_best_iter)
         print("Mitigated", result_mitigated.optimal_value)
         print("Ideal", result_ideal.optimal_value)
         print("Diagonalization", min(np.real_if_close(np.linalg.eig(Operator(operator))[0])))
@@ -333,6 +336,7 @@ if __name__ == '__main__':
         bond_lengths.append(bond_length)
         noisy.append(result_noisy.optimal_value)
         zne.append(result_zne_mitigated.optimal_value)
+        zne_at_best_iter.append(result_zne_at_best_iter)
         mitigated.append(result_mitigated.optimal_value)
         ideal.append(result_ideal.optimal_value)
         diagonalization.append(min(np.real_if_close(np.linalg.eig(Operator(operator))[0])))
@@ -341,6 +345,7 @@ if __name__ == '__main__':
     plt.plot(bond_lengths, diagonalization, label='ideal')
     plt.plot(bond_lengths, mitigated, label='mitigated')
     plt.plot(bond_lengths, zne, label='zne_mitigated')
+    plt.plot(bond_lengths, zne_at_best_iter, label='zne_mitigated_at_best_iter')
     plt.plot(bond_lengths, noisy, label='noisy')
     plt.legend()
     plt.show()
@@ -351,6 +356,7 @@ if __name__ == '__main__':
         'mitigated': mitigated,
         'noisy': noisy,
         'zne': zne,
+        'zne_at_best_iter': zne_at_best_iter,
     }
 
     if sep_ob_zne:
