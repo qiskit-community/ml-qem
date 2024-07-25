@@ -25,7 +25,7 @@ Other notebooks (with prefix "hXX", e.g., h01_mbd.ipynb), python scripts, and da
 ----------------------------------------------------------------------------------------------------
 
 ### Source Data for Figures
-The [Excel sheets](https://github.com/qiskit-community/blackwater/blob/c36d50f2831979ebce66c3d1c5f4b34d24af2840/docs/paper_figures/ML-QEM%20Source%20data.xlsx) contain the source data for the Figures in our paper.
+The [Excel sheets](https://github.com/qiskit-community/blackwater/blob/c36d50f2831979ebce66c3d1c5f4b34d24af2840/docs/paper_figures/ML-QEM%20Source%20data.xlsx) contain the source data for the Figures in our paper. Datasets can be found and loaded using the [script](./docs/paper_figures/plot.ipynb).
 
 ----------------------------------------------------------------------------------------------------
 
