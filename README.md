@@ -8,11 +8,12 @@ Machine Learning for Practical Quantum Error Mitigation
 1.  [Installation](./docs/installation_guide.md)
 2.  [Instructions for Use](#instruction-for-use)
 3.  [Demos](./docs/demos)
-4.  [Citation](#citation)
-5.  [How to Give Feedback](#how-to-give-feedback)
-6.  [Contribution Guidelines](#contribution-guidelines)
-7.  [References and Acknowledgements](#references-and-acknowledgements)
-8.  [License](#license)
+4.  [Source Data](#source-data-for-figures)
+5.  [Citation](#citation)
+6.  [How to Give Feedback](#how-to-give-feedback)
+7.  [Contribution Guidelines](#contribution-guidelines)
+8.  [References and Acknowledgements](#references-and-acknowledgements)
+9.  [License](#license)
 
 ---------------------------------------------------------------------------------------------------
 
@@ -20,6 +21,11 @@ Machine Learning for Practical Quantum Error Mitigation
 We provide two datasets and notebooks for demonstration. The [first demo](./docs/demos/demo1_rf_mimic_zne_100q_twirl.ipynb) shows our ML-QEM method mimicking digital ZNE + Pauli twirling on a 100Q TFIM Trotter circuit. The [second demo](./docs/demos/emo2_ising_4q_hardware_plot.ipynb) shows our ML-QEM mitigating the expectation values of a 4Q TFIM Trotter circuit on real hardware, outperforming digital ZNE.
 
 Other notebooks (with prefix "hXX", e.g., h01_mbd.ipynb), python scripts, and datasets can be found in this [folder](./docs/tutorials). Specifically, circuit-level features and MLP models can be found in [mlp.py](./docs/tutorials/mlp.py), and GNN models can be found in [gnn.py](./docs/tutorials/gnn.py).
+
+----------------------------------------------------------------------------------------------------
+
+### Source Data for Figures
+The [Excel sheets](https://github.com/qiskit-community/blackwater/blob/c36d50f2831979ebce66c3d1c5f4b34d24af2840/docs/paper_figures/ML-QEM%20Source%20data.xlsx) contain the source data for the Figures in our paper. Datasets can be found and loaded using the [script](./docs/paper_figures/plot.ipynb).
 
 ----------------------------------------------------------------------------------------------------
 
