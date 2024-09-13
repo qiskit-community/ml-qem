@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.append(os.path.abspath('..'))
 
-project = "BlackWater"
+project = "ML-QEM"
 copyright = "2023"  # pylint: disable=redefined-builtin
 author = ""
 

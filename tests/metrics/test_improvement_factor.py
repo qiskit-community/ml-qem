@@ -1,7 +1,7 @@
 """Tests for improvement factor metric."""
 from unittest import TestCase
 
-from blackwater.metrics.improvement_factor import improvement_factor, Problem, Trial
+from ml_qem.metrics.improvement_factor import improvement_factor, Problem, Trial
 
 
 class TestImprovementFactor(TestCase):

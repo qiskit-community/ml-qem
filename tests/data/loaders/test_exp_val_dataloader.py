@@ -6,8 +6,8 @@ from unittest import TestCase
 from qiskit.providers.fake_provider import FakeLima
 from torch_geometric.data import Data
 
-from blackwater.data.generators.exp_val import exp_value_generator
-from blackwater.data.loaders.exp_val import CircuitGraphExpValMitigationDataset
+from ml_qem.data.generators.exp_val import exp_value_generator
+from ml_qem.data.loaders.exp_val import CircuitGraphExpValMitigationDataset
 
 
 class TestExpValDataloader(TestCase):

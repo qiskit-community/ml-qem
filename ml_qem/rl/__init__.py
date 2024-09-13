@@ -1,9 +1,9 @@
 """
-=========================
-RL (:mod:`blackwater.rl`)
-=========================
+=====================
+RL (:mod:`ml_qem.rl`)
+=====================
 
-.. currentmodule:: blackwater.rl
+.. currentmodule:: ml_qem.rl
 
 RL
 ==

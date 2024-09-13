@@ -4,9 +4,9 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
 
-from blackwater.data.core import DataEncoder
-from blackwater.data.encoders.circuit import DefaultCircuitEncoder
-from blackwater.data.encoders.operator import DefaultOperatorEncoder
+from ml_qem.data.core import DataEncoder
+from ml_qem.data.encoders.circuit import DefaultCircuitEncoder
+from ml_qem.data.encoders.operator import DefaultOperatorEncoder
 
 
 class DefaultNumpyEstimatorInputEncoder(DataEncoder):

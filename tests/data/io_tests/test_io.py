@@ -8,8 +8,8 @@ from qiskit import transpile
 from qiskit.providers.fake_provider import FakeLimaV2
 from qiskit.quantum_info import SparsePauliOp
 
-from blackwater.data.dataio import ExpValDataWriter, ExpValDataReader
-from blackwater.data.encoders.graph_utils import ExpValData
+from ml_qem.data.dataio import ExpValDataWriter, ExpValDataReader
+from ml_qem.data.encoders.graph_utils import ExpValData
 from tests.data.encoders.test_graph import create_bell_circuit
 
 

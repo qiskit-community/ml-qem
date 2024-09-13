@@ -5,7 +5,7 @@ from torch_geometric import transforms as pyg_transforms
 from torch_geometric.data import Dataset
 from torch_geometric.transforms import BaseTransform
 
-from blackwater.data.dataio import ExpValDataReader
+from ml_qem.data.dataio import ExpValDataReader
 
 # pylint: disable=abstract-method
 class ExpValDataSet(Dataset):

@@ -5,8 +5,8 @@ from unittest import TestCase
 import numpy as np
 from qiskit.circuit.random import random_circuit
 
-from blackwater.data import DefaultNumpyEstimatorInputEncoder
-from blackwater.data.encoders.utils import generate_random_pauli_sum_op
+from ml_qem.data import DefaultNumpyEstimatorInputEncoder
+from ml_qem.data.encoders.utils import generate_random_pauli_sum_op
 
 
 class TestNumpyEncoders(TestCase):

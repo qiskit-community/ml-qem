@@ -15,9 +15,9 @@ from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.transpiler import Target
 from torch_geometric.data import Data
 
-from blackwater.data.core import DataEncoder, BlackwaterData, NodeEncoder
-from blackwater.data.encoders.utils import OperatorData, encode_operator
-from blackwater.exception import BlackwaterException
+from ml_qem.data.core import DataEncoder, MLQEMData, NodeEncoder
+from ml_qem.data.encoders.utils import OperatorData, encode_operator
+from ml_qem.exception import MLQEMException
 
 N_QUBIT_PROPERTIES = 2
 ALL_INSTRUCTIONS = list(get_standard_gate_name_mapping().keys())
@@ -106,9 +106,7 @@ def extract_properties_from_backend(
         return BackendProperties(qubit_properties_map)
 
     else:
-        raise BlackwaterException(
-            f"Backend of type [{type(backend)}] is not supported yet."
-        )
+        raise MLQEMException(f"Backend of type [{type(backend)}] is not supported yet.")
 
 
 class BackendNodeEncoder(NodeEncoder):
@@ -145,7 +143,7 @@ class BackendNodeEncoder(NodeEncoder):
                     params_encoding[i] = float(param._symbol_expr)
 
             if node.op.name not in self.encoding_map:
-                raise BlackwaterException(
+                raise MLQEMException(
                     f"Instruction [{node.op.name}] is not available"
                     f" for backend [{self.backend.name}]. "
                     f"Maybe you forgot to transpile circuit for this backend?"
@@ -234,7 +232,7 @@ def backend_to_json_graph(backend: Union[BackendV1, BackendV2]) -> GraphData:
         dictionary with encoded data as graph
     """
     if isinstance(backend, BackendV1):
-        raise BlackwaterException("BackendV1 is not supported yet.")
+        raise MLQEMException("BackendV1 is not supported yet.")
 
     target: Target = backend.target
 
@@ -252,7 +250,7 @@ def backend_to_json_graph(backend: Union[BackendV1, BackendV2]) -> GraphData:
 
 
 @dataclass
-class PygData(BlackwaterData):
+class PygData(MLQEMData):
     """PygData."""
 
     @classmethod

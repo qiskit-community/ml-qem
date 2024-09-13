@@ -2,7 +2,7 @@
 
 **We appreciate all kinds of help, so thank you!**
 
-## Contributing to Blackwater
+## Contributing to ML-QEM
 
 Specific details for contributing to this project are outlined below.
 
@@ -10,7 +10,7 @@ Specific details for contributing to this project are outlined below.
 
 Users are encouraged to use GitHub Issues for reporting issues and requesting features.
 
-### Ask/Answer Questions and Discuss Blackwater
+### Ask/Answer Questions and Discuss ML-QEM
 
 Users are encouraged to use GitHub Discussions for engaging with researchers, developers, and other users regarding this project and the provided examples.
 

@@ -1,4 +1,5 @@
 """Dataclasses module."""
+
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import List, Any
@@ -76,8 +77,8 @@ class NodeEncoder(DataEncoder):
 
 # pylint: disable=no-member
 @dataclass
-class BlackwaterData:
-    """BlackwaterData."""
+class MLQEMData:
+    """MLQEMData."""
 
     def serialize(self) -> dict:
         """Serialize class data to dictionary"""

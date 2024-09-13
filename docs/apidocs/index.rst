@@ -1,8 +1,8 @@
-.. module:: blackwater
+.. module:: ml_qem
 
-=========================
-BlackWater API References
-=========================
+=====================
+ML-QEM API References
+=====================
 
 .. toctree::
    :maxdepth: 1

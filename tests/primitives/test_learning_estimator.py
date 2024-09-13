@@ -10,10 +10,10 @@ from qiskit.providers.fake_provider import FakeLimaV2
 from sklearn.datasets import make_regression
 from sklearn.ensemble import RandomForestRegressor
 
-from blackwater.data import DefaultNumpyEstimatorInputEncoder
-from blackwater.data.encoders.graph_utils import DefaultPyGEstimatorEncoder
-from blackwater.data.encoders.utils import generate_random_pauli_sum_op
-from blackwater.primitives.learning_esimator import (
+from ml_qem.data import DefaultNumpyEstimatorInputEncoder
+from ml_qem.data.encoders.graph_utils import DefaultPyGEstimatorEncoder
+from ml_qem.data.encoders.utils import generate_random_pauli_sum_op
+from ml_qem.primitives.learning_esimator import (
     learning_estimator,
     ScikitLearnEstimatorModel,
     TorchGeometricEstimatorModel,

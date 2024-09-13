@@ -8,8 +8,8 @@ from qiskit import QuantumCircuit
 from qiskit.providers import BackendV2
 from torch_geometric.data import Data
 
-from blackwater.data.core import CircuitEncoder
-from blackwater.data.encoders.graph_utils import (
+from ml_qem.data.core import CircuitEncoder
+from ml_qem.data.encoders.graph_utils import (
     DefaultNodeEncoder,
     circuit_to_json_graph,
     BackendNodeEncoder,
