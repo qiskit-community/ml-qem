@@ -1,0 +1,6 @@
+﻿ml\_qem.metrics.improvement\_factor
+===================================
+
+.. currentmodule:: ml_qem.metrics
+
+.. autofunction:: improvement_factor

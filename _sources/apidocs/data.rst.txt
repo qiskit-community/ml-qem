@@ -1,6 +1,6 @@
-.. _blackwater-data:
+.. _ml_qem-data:
 
-.. automodule:: blackwater.data
+.. automodule:: ml_qem.data
    :no-members:
    :no-inherited-members:
    :no-special-members:

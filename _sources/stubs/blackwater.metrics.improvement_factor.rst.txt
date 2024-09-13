@@ -1,6 +1,0 @@
-﻿blackwater.metrics.improvement\_factor
-======================================
-
-.. currentmodule:: blackwater.metrics
-
-.. autofunction:: improvement_factor

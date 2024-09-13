@@ -1,0 +1,43 @@
+﻿ml\_qem.rl.UnitarySynthesisEnv
+==============================
+
+.. currentmodule:: ml_qem.rl
+
+.. autoclass:: UnitarySynthesisEnv
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UnitarySynthesisEnv.__init__
+      ~UnitarySynthesisEnv.apply_action_to_circuit
+      ~UnitarySynthesisEnv.close
+      ~UnitarySynthesisEnv.get_reward
+      ~UnitarySynthesisEnv.get_wrapper_attr
+      ~UnitarySynthesisEnv.one_hot_encode_instr_type
+      ~UnitarySynthesisEnv.render
+      ~UnitarySynthesisEnv.reset
+      ~UnitarySynthesisEnv.step
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UnitarySynthesisEnv.metadata
+      ~UnitarySynthesisEnv.np_random
+      ~UnitarySynthesisEnv.render_mode
+      ~UnitarySynthesisEnv.reward_range
+      ~UnitarySynthesisEnv.spec
+      ~UnitarySynthesisEnv.unwrapped
+      ~UnitarySynthesisEnv.action_space
+      ~UnitarySynthesisEnv.observation_space
+   
+   

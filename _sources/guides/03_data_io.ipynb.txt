@@ -19,9 +19,9 @@
     "from qiskit.providers.fake_provider import FakeLimaV2\n",
     "from qiskit.quantum_info import SparsePauliOp\n",
     "\n",
-    "from blackwater.data.encoders.graph_utils import ExpValData\n",
-    "from blackwater.data.dataio.dataio import ExpValDataWriter\n",
-    "from blackwater.data.loaders.dataclasses import ExpValDataSet"
+    "from ml_qem.data.encoders.graph_utils import ExpValData\n",
+    "from ml_qem.data.dataio.dataio import ExpValDataWriter\n",
+    "from ml_qem.data.loaders.dataclasses import ExpValDataSet"
    ]
   },
   {

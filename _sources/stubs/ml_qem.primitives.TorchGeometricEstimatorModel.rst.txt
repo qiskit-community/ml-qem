@@ -1,0 +1,24 @@
+﻿ml\_qem.primitives.TorchGeometricEstimatorModel
+===============================================
+
+.. currentmodule:: ml_qem.primitives
+
+.. autoclass:: TorchGeometricEstimatorModel
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TorchGeometricEstimatorModel.__init__
+      ~TorchGeometricEstimatorModel.predict
+      ~TorchGeometricEstimatorModel.run
+   
+   
+
+   
+   
+   

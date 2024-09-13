@@ -1,0 +1,6 @@
+﻿ml\_qem.primitives.learning\_estimator
+======================================
+
+.. currentmodule:: ml_qem.primitives
+
+.. autofunction:: learning_estimator

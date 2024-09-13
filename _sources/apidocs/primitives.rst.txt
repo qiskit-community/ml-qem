@@ -1,6 +1,6 @@
-.. _blackwater-primitives:
+.. _ml_qem-primitives:
 
-.. automodule:: blackwater.primitives
+.. automodule:: ml_qem.primitives
    :no-members:
    :no-inherited-members:
    :no-special-members:

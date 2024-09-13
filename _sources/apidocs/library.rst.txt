@@ -1,6 +1,6 @@
-.. _blackwater-library:
+.. _ml_qem-library:
 
-.. automodule:: blackwater.library
+.. automodule:: ml_qem.library
    :no-members:
    :no-inherited-members:
    :no-special-members:

@@ -1,6 +1,6 @@
-.. _blackwater-metrics:
+.. _ml_qem-metrics:
 
-.. automodule:: blackwater.metrics
+.. automodule:: ml_qem.metrics
    :no-members:
    :no-inherited-members:
    :no-special-members:
