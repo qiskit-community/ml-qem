@@ -1,9 +1,6 @@
-# Blackwater
+# ML-QEM
 
-![logo](./docs/images/logo.gif)
-
-Package for solving quantum computing problems using machine learning.
-
+Package for quantum error mitigation and solving general quantum computing problems using machine learning.
 
 ### Table of Contents
 
@@ -21,7 +18,7 @@ Package for solving quantum computing problems using machine learning.
 ### How to Give Feedback
 
 We encourage your feedback! You can share your thoughts with us by:
-- [Opening an issue](https://github.com/IceKhan13/blackwater/issues) in the repository
+- [Opening an issue](https://github.com/qiskit-community/ml-qem/issues) in the repository
 
 
 ----------------------------------------------------------------------------------------------------
@@ -38,7 +35,6 @@ For information on how to contribute to this project, please take a look at our 
 [2] Qiskit-terra https://github.com/Qiskit/qiskit-terra \
 [3] PyTorch https://pytorch.org/ \
 [4] PyTorch geometric https://pytorch-geometric.readthedocs.io/en/latest/ \
-[5] [Zlatko Minev](https://github.com/zlatko-minev) for :water_polo: :ocean:
 
 ----------------------------------------------------------------------------------------------------
 

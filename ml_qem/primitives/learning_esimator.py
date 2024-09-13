@@ -11,15 +11,15 @@ from qiskit.primitives import BaseEstimator, EstimatorResult
 from qiskit.providers import JobV1 as Job, Options, BackendV2
 from qiskit.quantum_info import SparsePauliOp
 
-from blackwater.data.core import DataEncoder
-from blackwater.exception import BlackwaterException
+from ml_qem.data.core import DataEncoder
+from ml_qem.exception import MLQEMException
 
 
-class BlackWaterEstimatorModel:
+class MLQEMEstimatorModel:
     """Base model for learning based estimator primitive."""
 
     def __init__(self, encoder: DataEncoder):
-        """Constructor for BlackWaterEstimatorModel
+        """Constructor for MLQEMEstimatorModel
 
         Args:
             encoder: input data encoder for model
@@ -62,7 +62,7 @@ class BlackWaterEstimatorModel:
         raise NotImplementedError
 
 
-class ScikitLearnEstimatorModel(BlackWaterEstimatorModel):
+class ScikitLearnEstimatorModel(MLQEMEstimatorModel):
     """Learning based model for scikit learn."""
 
     def __init__(self, model, encoder: DataEncoder):
@@ -79,7 +79,7 @@ class ScikitLearnEstimatorModel(BlackWaterEstimatorModel):
         return self.model.predict([encoded_inputs]).item()
 
 
-class TorchGeometricEstimatorModel(BlackWaterEstimatorModel):
+class TorchGeometricEstimatorModel(MLQEMEstimatorModel):
     """Learning based model for pytorch geometric."""
 
     def __init__(self, model: torch.nn.Module, encoder: DataEncoder):
@@ -114,7 +114,7 @@ class LearningEstimatorJob(Job):
     def __init__(  # pylint: disable=super-init-not-called
         self,
         base_job: Job,
-        model: BlackWaterEstimatorModel,
+        model: MLQEMEstimatorModel,
         backend: BackendV2,
         circuits: Union[QuantumCircuit, List[QuantumCircuit]],
         observables: Union[PauliSumOp, List[PauliSumOp]],
@@ -144,7 +144,7 @@ class LearningEstimatorJob(Job):
             result.metadata,
         ):
             if not isinstance(obs, (PauliSumOp, SparsePauliOp)):
-                raise BlackwaterException(
+                raise MLQEMException(
                     "Only `PauliSumOp` observables are supported by NGEM."
                 )
 
@@ -182,7 +182,7 @@ class LearningEstimatorJob(Job):
 
 def patch_run(
     run: Callable,
-    model: BlackWaterEstimatorModel,
+    model: MLQEMEstimatorModel,
     backend: BackendV2,
     skip_transpile: bool,
     options: Optional[Options] = None,
@@ -220,7 +220,7 @@ def patch_run(
 
 def learning_estimator(
     cls: Type[BaseEstimator],
-    model: BlackWaterEstimatorModel,
+    model: MLQEMEstimatorModel,
     backend: BackendV2,
     skip_transpile: bool = False,
     options: Optional[Options] = None,

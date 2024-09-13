@@ -76,8 +76,8 @@ class NodeEncoder(DataEncoder):
 
 # pylint: disable=no-member
 @dataclass
-class BlackwaterData:
-    """BlackwaterData."""
+class MLQEMData:
+    """MLQEMData."""
 
     def serialize(self) -> dict:
         """Serialize class data to dictionary"""

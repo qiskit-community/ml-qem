@@ -1,5 +1,5 @@
 ---
-title: 'BlackWater: library.rst for solving quantum computing problems using machine learning'
+title: 'ML-QEM: library.rst for solving quantum computing problems using machine learning'
 tags:
   - quantum computing
   - qiskit
@@ -19,10 +19,10 @@ bibliography: paper.bib
 
 # Summary
 
-BlackWater is an open-source machine learning library designed to address 
+ML-QEM is an open-source machine learning library designed to address 
 the challenges of solving quantum computing problems. By integrating 
 cutting-edge machine learning techniques with the intricacies of quantum 
-computing, BlackWater provides a comprehensive set of tools for researchers 
+computing, ML-QEM provides a comprehensive set of tools for researchers 
 and practitioners in the field. This library enables the application of 
 classical machine learning algorithms to quantum computing, bridging 
 the gap between the two domains and accelerating the development of 

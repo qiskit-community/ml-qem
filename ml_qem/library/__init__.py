@@ -1,9 +1,9 @@
 """
-===================================
-Library (:mod:`blackwater.library`)
-===================================
+===============================
+Library (:mod:`ml_qem.library`)
+===============================
 
-.. currentmodule:: blackwater.library
+.. currentmodule:: ml_qem.library
 
 Library
 =======

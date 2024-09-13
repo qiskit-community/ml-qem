@@ -10,7 +10,7 @@ from typing import Optional, List, Union, Tuple
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 
-from blackwater.exception import BlackwaterException
+from ml_qem.exception import MLQEMException
 
 
 @dataclass
@@ -75,7 +75,7 @@ def improvement_factor(
     """
 
     if len(problems) == 0:
-        raise BlackwaterException("Problem list should not be empty.")
+        raise MLQEMException("Problem list should not be empty.")
 
     if not isinstance(problems[0], Problem):
         problems: List[Problem] = [

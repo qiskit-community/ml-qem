@@ -1,4 +1,4 @@
-"""Setup file for Blackwater."""
+"""Setup file for ML QEM."""
 import os
 import setuptools
 
@@ -13,14 +13,14 @@ with open("requirements-graph.txt") as f:
 
 
 version_path = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "blackwater", "VERSION.txt")
+    os.path.join(os.path.dirname(__file__), "ml_qem", "VERSION.txt")
 )
 
 with open(version_path, "r") as fd:
     version = fd.read().rstrip()
 
 setuptools.setup(
-    name="blackwater",
+    name="ml_qem",
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",

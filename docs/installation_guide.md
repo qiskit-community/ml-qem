@@ -1,4 +1,4 @@
-# Blackwater Installation Guide
+# ML-QEM Installation Guide
 
 ## PyPi
 
@@ -13,7 +13,7 @@ Installation through PyPi is not available
 pip install -r requirements.txt
 ```
 
-3. Installing Blackwater
+3. Installing ML-QEM
 
 ```shell
 pip install .

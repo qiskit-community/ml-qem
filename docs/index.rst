@@ -1,12 +1,10 @@
-##########
-BlackWater
-##########
+######
+ML-QEM
+######
 
-BlackWater: Library for solving quantum computing problems using machine learning
+ML-QEM: Library for quantum error mitigation and solving quantum computing problems using machine learning
 
-.. image:: /images/logo.gif
-
-The source code to the project is available `on GitHub <https://github.com/IceKhan13/blackwater>`_.
+The source code to the project is available `on GitHub <https://github.com/qiskit-community/ml-qem>`_.
 
 ------------
 
@@ -15,7 +13,7 @@ The source code to the project is available `on GitHub <https://github.com/IceKh
 .. code-block::
    :caption: pip install
 
-      pip install blackwater
+      pip install ml_qem
 
 
 ------------

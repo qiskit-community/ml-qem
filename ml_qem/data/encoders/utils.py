@@ -18,7 +18,7 @@ from qiskit_aer.primitives import Estimator as AerEstimator
 from torch_geometric.data import Data
 
 # pylint: disable=no-member
-from blackwater.exception import BlackwaterException
+from ml_qem.exception import MLQEMException
 
 
 @dataclass
@@ -80,7 +80,7 @@ def encode_operator(operator: Union[BaseOperator]) -> OperatorData:
     elif isinstance(operator, PauliSumOp):
         result = encode_pauli_sum_operator(operator)
     else:
-        raise BlackwaterException(
+        raise MLQEMException(
             f"Operator of type [{type(operator)}] is not supported yet."
         )
 
@@ -312,7 +312,7 @@ def circuit_to_graph_data_json(
                 i: {} for i in range(3)
             }  # as 3 is max number of operable gate size
             if node.name != "barrier" and len(node.qargs) > 3:
-                raise BlackwaterException(
+                raise MLQEMException(
                     "Non barrier gate that has more than 3 qubits."
                     "Those tyoe of gates are not supported yet."
                 )

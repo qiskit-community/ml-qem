@@ -1,9 +1,9 @@
 """
-=========================================
-Primitives (:mod:`blackwater.primitives`)
-=========================================
+=====================================
+Primitives (:mod:`ml_qem.primitives`)
+=====================================
 
-.. currentmodule:: blackwater.primitives
+.. currentmodule:: ml_qem.primitives
 
 Classes and functions
 =====================
@@ -12,14 +12,14 @@ Classes and functions
    :toctree: ../stubs/
 
    learning_estimator
-   BlackWaterEstimatorModel
+   MLQEMEstimatorModel
    ScikitLearnEstimatorModel
    TorchGeometricEstimatorModel
 """
 
 from .learning_esimator import (
     learning_estimator,
-    BlackWaterEstimatorModel,
+    MLQEMEstimatorModel,
     ScikitLearnEstimatorModel,
     TorchGeometricEstimatorModel,
 )

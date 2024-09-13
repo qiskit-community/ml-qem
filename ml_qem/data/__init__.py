@@ -1,9 +1,9 @@
 """
-=============================
-Data (:mod:`blackwater.data`)
-=============================
+=========================
+Data (:mod:`ml_qem.data`)
+=========================
 
-.. currentmodule:: blackwater.data
+.. currentmodule:: ml_qem.data
 
 Circuit encoders
 ================
