@@ -7,14 +7,14 @@ from qiskit.providers import BackendV1
 from qiskit.quantum_info import Operator
 from qiskit_experiments.library import StandardRB
 
-from blackwater.data.encoders.utils import (
+from ml_qem.data.encoders.utils import (
     get_backend_properties_v1,
     circuit_to_graph_data_json,
     generate_random_pauli_sum_op,
     create_estimator_meas_data,
     encode_pauli_sum_op,
 )
-from blackwater.data.generators.exp_val import ExpValueEntry
+from ml_qem.data.generators.exp_val import ExpValueEntry
 
 
 def generate_rb_circuit(

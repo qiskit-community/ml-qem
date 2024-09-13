@@ -1,4 +1,5 @@
 """Operator encoders."""
+
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Union, Any
 

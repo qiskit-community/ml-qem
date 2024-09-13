@@ -3,8 +3,8 @@
 import numpy as np
 from qiskit.quantum_info import Operator
 
-from blackwater.data.core import OperatorEncoder
-from blackwater.data.encoders.utils import encode_operator
+from ml_qem.data.core import OperatorEncoder
+from ml_qem.data.encoders.utils import encode_operator
 
 
 class DefaultOperatorEncoder(OperatorEncoder):

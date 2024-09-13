@@ -6,7 +6,7 @@ from torch_geometric import transforms as pyg_transforms
 from torch_geometric.data import Dataset
 from torch_geometric.transforms import BaseTransform
 
-from blackwater.data.generators.exp_val import ExpValueEntry
+from ml_qem.data.generators.exp_val import ExpValueEntry
 
 
 # pylint: disable=abstract-method

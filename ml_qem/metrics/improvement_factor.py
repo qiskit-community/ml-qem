@@ -2,6 +2,7 @@
 
 https://arxiv.org/pdf/2210.07194.pdf
 """
+
 import typing
 from dataclasses import dataclass
 from math import sqrt

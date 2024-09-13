@@ -7,7 +7,7 @@ from qiskit.providers.fake_provider import FakeLimaV2
 from qiskit.quantum_info import SparsePauliOp
 from torch_geometric.data import Data
 
-from blackwater.data.encoders.graph_utils import ExpValData
+from ml_qem.data.encoders.graph_utils import ExpValData
 from tests.data.encoders.test_graph import create_bell_circuit
 
 

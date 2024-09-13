@@ -4,7 +4,7 @@ from unittest import TestCase
 from qiskit import QuantumCircuit, transpile
 from qiskit.providers.fake_provider import FakeLimaV2
 
-from blackwater.data.encoders.graph_utils import (
+from ml_qem.data.encoders.graph_utils import (
     circuit_to_json_graph,
     GraphData,
     BackendNodeEncoder,

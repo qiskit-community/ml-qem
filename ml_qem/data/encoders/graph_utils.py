@@ -106,9 +106,7 @@ def extract_properties_from_backend(
         return BackendProperties(qubit_properties_map)
 
     else:
-        raise MLQEMException(
-            f"Backend of type [{type(backend)}] is not supported yet."
-        )
+        raise MLQEMException(f"Backend of type [{type(backend)}] is not supported yet.")
 
 
 class BackendNodeEncoder(NodeEncoder):

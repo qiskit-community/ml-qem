@@ -7,8 +7,8 @@ from qiskit.circuit.library import get_standard_gate_name_mapping
 from qiskit.providers import BackendV1, BackendV2
 from torch_geometric.data import Data
 
-from blackwater.data.core import BackendEncoder
-from blackwater.data.encoders.graph_utils import backend_to_json_graph
+from ml_qem.data.core import BackendEncoder
+from ml_qem.data.encoders.graph_utils import backend_to_json_graph
 
 N_QUBIT_PROPERTIES = 2
 ALL_INSTRUCTIONS = list(get_standard_gate_name_mapping().keys())
