@@ -1,6 +1,6 @@
-# ML-QEM
+# ML-QEM: Machine Learning for Practical Quantum Error Mitigation
 
-Package for quantum error mitigation and solving general quantum computing problems using machine learning.
+Package for quantum error mitigation and solving general quantum computing problems using machine learning. Based on the paper [Machine Learning for Practical Quantum Error Mitigation](https://arxiv.org/abs/2309.17368).
 
 ### Table of Contents
 
