@@ -6,14 +6,15 @@ Machine Learning for Practical Quantum Error Mitigation
 ##### For Users
 
 1.  [Installation](./docs/installation_guide.md)
-2.  [Instructions for Use](#instruction-for-use)
+2.  [Instructions for Use](#instructions-for-use)
 3.  [Demos](./docs/demos)
 4.  [Source Data](#source-data-for-figures)
-5.  [Citation](#citation)
-6.  [How to Give Feedback](#how-to-give-feedback)
-7.  [Contribution Guidelines](#contribution-guidelines)
-8.  [References and Acknowledgements](#references-and-acknowledgements)
-9.  [License](#license)
+5.  [Generic Decorator for Qiskit Estimator Primitives](#Generic-Decorator-for-Qiskit-Esitmator-Primitives)
+6.  [Citation](#citation)
+7.  [How to Give Feedback](#how-to-give-feedback)
+8.  [Contribution Guidelines](#contribution-guidelines)
+9.  [References and Acknowledgements](#references-and-acknowledgements)
+10.  [License](#license)
 
 ---------------------------------------------------------------------------------------------------
 
@@ -26,6 +27,13 @@ Other notebooks (with prefix "hXX", e.g., h01_mbd.ipynb), python scripts, and da
 
 ### Source Data for Figures
 The [Excel sheets](https://github.com/qiskit-community/blackwater/blob/c36d50f2831979ebce66c3d1c5f4b34d24af2840/docs/paper_figures/ML-QEM%20Source%20data.xlsx) contain the source data for the Figures in our paper. Datasets can be found and loaded using the [script](./docs/paper_figures/plot.ipynb).
+
+----------------------------------------------------------------------------------------------------
+
+### Generic Decorator for Qiskit Esitmator Primitives
+We also introduce a generic decorator for Qiskit Estimator primitives. This decorator converts the Estimator into a LearningEstimator, granting it the capability to perform a postprocessing step. During this step, we apply the mitigation model to the noisy expectation value to produce the final mitigated results. This manipulation maintains the object types, so we can utilize the LearningEstimator as a regular Estimator primitive within the entire Qiskit application and algorithm ecosystem without any further modifications.
+
+The decorator requires a model as one of the arguments. We provide several default models, such as Scikit-learn, PyTorch, and TensorFlow, and examples of how to train and use them. The source code, documentation, and examples can be found in the main branch.
 
 ----------------------------------------------------------------------------------------------------
 
