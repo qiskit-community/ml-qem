@@ -1,5 +1,5 @@
 # ML-QEM
-Machine Learning for Practical Quantum Error Mitigation
+Machine Learning for Practical Quantum Error Mitigation [[arXiv](https://arxiv.org/abs/2309.17368)]
 
 ### Table of Contents
 
@@ -15,6 +15,12 @@ Machine Learning for Practical Quantum Error Mitigation
 8.  [Contribution Guidelines](#contribution-guidelines)
 9.  [References and Acknowledgements](#references-and-acknowledgements)
 10.  [License](#license)
+
+---------------------------------------------------------------------------------------------------
+
+### Overview
+
+Quantum computers are actively competing to surpass classical supercomputers, but quantum errors remain their chief obstacle. The key to overcoming these on near-term devices has emerged through the field of quantum error mitigation, enabling improved accuracy at the cost of additional runtime. In practice, however, the success of mitigation is limited by a generally exponential overhead. Can classical machine learning address this challenge on today's quantum computers? Here, through both simulations and experiments on state-of-the-art quantum computers using up to 100 qubits, we demonstrate that machine learning for quantum error mitigation (ML-QEM) can drastically reduce overheads, maintain or even surpass the accuracy of conventional methods, and yield near noise-free results for quantum algorithms. We benchmark a variety of machine learning models -- linear regression, random forests, multi-layer perceptrons, and graph neural networks -- on diverse classes of quantum circuits, over increasingly complex device-noise profiles, under interpolation and extrapolation, and for small and large quantum circuits. These tests employ the popular digital zero-noise extrapolation method as an added reference. We further show how to scale ML-QEM to classically intractable quantum circuits by mimicking the results of traditional mitigation results, while significantly reducing overhead. Our results highlight the potential of classical machine learning for practical quantum computation.
 
 ---------------------------------------------------------------------------------------------------
 
@@ -39,7 +45,7 @@ The decorator requires a model as one of the arguments. We provide several defau
 
 ### Citation
 
-Using the code please consider citing:
+Using the code, please cite the paper ([arXiv link here](https://arxiv.org/abs/2309.17368)):
 ```
 @article{ML-QEM,
   title={Machine Learning for Practical Quantum Error Mitigation}, 
