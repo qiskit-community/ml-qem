@@ -1,4 +1,8 @@
 # ML-QEM
+
+> [!NOTE]
+> This repository is associated to a [research publication](https://arxiv.org/abs/2309.17368) and the code here is not actively maintained. This is not an officially supported IBM Quantum software.
+
 Machine Learning for Practical Quantum Error Mitigation <br>
 [[Nature Machine Intelligence (NMI) (2024)](https://www.nature.com/articles/s42256-024-00927-2),  [NMI open read](https://trebuchet.public.springernature.app/get_content/289228b8-65f6-4328-aeb3-2d0fc0184496), 
 [arXiv](https://arxiv.org/abs/2309.17368), [IBM Seminar Video](https://www.youtube.com/watch?app=desktop&v=w7GHPmfCzZs&ab_channel=Qiskit) ]
